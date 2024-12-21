@@ -54,7 +54,30 @@ wss.on("connection", (ws) => {
 
         // Upload the extracted audio to AssemblyAI
         const response = await uploadToAssemblyAI(fs.readFileSync(audioPath));
-        const transcriptId = response.data.id;
+        const uploadUrl = response.data.upload_url;
+
+        ws.send(
+          JSON.stringify({
+            event: "progress",
+            data: "File uploaded to servers...",
+          })
+        );
+
+        // Request transcription from AssemblyAI
+        const transcriptResponse = await axios.post(
+          "https://api.assemblyai.com/v2/transcript",
+          {
+            audio_url: uploadUrl,
+          },
+          {
+            headers: {
+              authorization: process.env.ASSEMBLYAI_API_KEY,
+              "content-type": "application/json",
+            },
+          }
+        );
+
+        const transcriptId = transcriptResponse.data.id;
 
         ws.send(
           JSON.stringify({
@@ -105,7 +128,8 @@ async function uploadToAssemblyAI(binaryData) {
 
   const endTime = Date.now();
 
-  console.log(`Audio uploaded to AssemblyAI in ${endTime - startTime}ms`);
+  const uploadTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
+  console.log(`Audio uploaded to AssemblyAI in ${uploadTimeInSeconds} seconds`);
   console.log("Response:", response.status, response.data);
 
   return response;
