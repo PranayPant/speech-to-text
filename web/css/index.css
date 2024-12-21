@@ -4,6 +4,9 @@ body {
   flex-direction: column;
   gap: 16px;
 }
+body main {
+  margin-top: 32px;
+}
 .flex-container {
   display: flex;
   flex-direction: row;

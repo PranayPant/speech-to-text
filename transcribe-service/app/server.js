@@ -22,7 +22,6 @@ wss.on("connection", (ws) => {
 
   ws.on("message", async (message) => {
     let event, data;
-    console.log("Message from client:", message);
     if (typeof message === "string") {
       ({ event, data } = JSON.parse(message));
     } else {
@@ -68,6 +67,7 @@ wss.on("connection", (ws) => {
           "https://api.assemblyai.com/v2/transcript",
           {
             audio_url: uploadUrl,
+            language_code: "hi",
           },
           {
             headers: {
@@ -78,6 +78,12 @@ wss.on("connection", (ws) => {
         );
 
         const transcriptId = transcriptResponse.data.id;
+
+        console.log(
+          "Transcript Response:",
+          transcriptResponse.status,
+          transcriptResponse.data.status
+        );
 
         ws.send(
           JSON.stringify({
@@ -154,6 +160,8 @@ async function pollTranscriptionProgress(transcriptId, ws) {
           data: `Transcription status: ${status}`,
         })
       );
+
+      console.log("Polling Response:", response.status, status);
 
       if (status === "completed" || status === "failed") {
         clearInterval(interval);
