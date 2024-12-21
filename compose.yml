@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  transcribe:
+    build: ./transcribe-service
+    environment:
+      - ASSEMBLYAI_API_KEY=a927b5ae663b4216a02cbe07a0de46cf
+      - TRANSCRIBE_PORT=${TRANSCRIBE_PORT:-8000}
+    volumes:
+      - ./data:/data
+    ports:
+      - "${TRANSCRIBE_PORT:-8000}:${TRANSCRIBE_PORT:-8000}"

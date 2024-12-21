@@ -1,0 +1,17 @@
+{
+    "name": "transcribe-service",
+    "version": "1.0.0",
+    "description": "A service for speech-to-text transcription",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "ws": "^8.0.0",
+        "axios": "^0.21.1",
+        "fluent-ffmpeg": "^2.1.2"
+    },
+    "author": "",
+    "license": "ISC",
+    "type": "module"
+}
