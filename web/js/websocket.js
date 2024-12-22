@@ -96,7 +96,7 @@ socket.onmessage = function (message) {
         try {
           const response = await fetch(
             `https://api.assemblyai.com/v2/transcript/${data.transcriptId}/srt`,
-            { headers: { authorization: process.env.ASSEMBLYAI_API_KEY } }
+            { headers: { authorization: "a927b5ae663b4216a02cbe07a0de46cf" } }
           );
           if (!response.ok) {
             throw new Error("Network response was not ok");

@@ -168,7 +168,10 @@ async function pollTranscriptionProgress(transcriptId, ws) {
         ws.send(
           JSON.stringify({
             event: "transcriptionComplete",
-            data: response.data,
+            data: {
+              transcriptId,
+              text: response.data.text,
+            },
           })
         );
       }
