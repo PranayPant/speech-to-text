@@ -47,7 +47,7 @@ wss.on("connection", (ws) => {
         ws.send(
           JSON.stringify({
             event: "progress",
-            data: "Audio extracted...",
+            data: "Audio extracted, uploading to servers...",
           })
         );
 
@@ -58,7 +58,7 @@ wss.on("connection", (ws) => {
         ws.send(
           JSON.stringify({
             event: "progress",
-            data: "File uploaded to servers...",
+            data: "File uploaded to servers, getting transcription...",
           })
         );
 

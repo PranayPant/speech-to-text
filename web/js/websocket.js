@@ -83,6 +83,38 @@ socket.onmessage = function (message) {
       downloadLink.addEventListener("click", function () {
         document.body.removeChild(progressBar);
       });
+      const downloadSubtitlesButton = document.createElement("button");
+      downloadSubtitlesButton.textContent = "Download Subtitles";
+      downloadSubtitlesButton.style.marginLeft = "16px";
+      downloadSubtitlesButton.style.padding = "10px 20px";
+      downloadSubtitlesButton.style.backgroundColor = "#4CAF50";
+      downloadSubtitlesButton.style.color = "white";
+      downloadSubtitlesButton.style.border = "none";
+      downloadSubtitlesButton.style.borderRadius = "5px";
+      downloadSubtitlesButton.style.cursor = "pointer";
+      downloadSubtitlesButton.addEventListener("click", async function () {
+        try {
+          const response = await fetch(
+            `https://api.assemblyai.com/v2/transcript/${data.transcriptId}/srt`,
+            { headers: { authorization: process.env.ASSEMBLYAI_API_KEY } }
+          );
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          const subtitles = await response.text();
+          const blob = new Blob([subtitles], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "subtitles.txt";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("Failed to download subtitles:", error);
+        }
+      });
+      progressBar.appendChild(downloadSubtitlesButton);
       break;
     default:
       console.log("Unknown event:", event);
