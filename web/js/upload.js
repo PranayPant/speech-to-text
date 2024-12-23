@@ -1,12 +1,11 @@
 import { sendVideoFile } from "./websocket.js";
 
 document
-  .getElementById("videoInput")
+  .getElementById("mediaInput")
   .addEventListener("change", handleVideoUpload);
 document
   .getElementById("clearButton")
   .addEventListener("click", clearVideoUploads);
-
 
 function handleVideoUpload(event) {
   const files = event.target.files;
@@ -29,7 +28,7 @@ function handleVideoUpload(event) {
     const transcribeButton = document.createElement("button");
     transcribeButton.className = "primary-action";
     transcribeButton.textContent = "Transcribe";
-    transcribeButton.addEventListener("click", function() {
+    transcribeButton.addEventListener("click", function () {
       sendVideoFile(file);
     });
 
@@ -40,16 +39,14 @@ function handleVideoUpload(event) {
 }
 
 function clearVideoUploads() {
-  const videoInput = document.getElementById("videoInput");
+  const mediaInput = document.getElementById("mediaInput");
   const videoContainer = document.getElementById("videoContainer");
 
   // Clear the file input
-  videoInput.value = "";
+  mediaInput.value = "";
 
   // Remove all video elements from the container
   while (videoContainer.firstChild) {
     videoContainer.removeChild(videoContainer.firstChild);
   }
 }
-
-

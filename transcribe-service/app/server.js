@@ -167,13 +167,67 @@ async function pollTranscriptionProgress(transcriptId, ws) {
         clearInterval(interval);
         ws.send(
           JSON.stringify({
-            event: "transcriptionComplete",
+            event:
+              status === "completed"
+                ? "transcriptionComplete"
+                : "transcriptionFailed",
             data: {
               transcriptId,
               text: response.data.text,
             },
           })
         );
+
+        if (status === "completed") {
+          const [sentencesResponse, srtResponse] = await Promise.all([
+            axios.get(
+              `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
+              {
+                headers: {
+                  authorization: process.env.ASSEMBLYAI_API_KEY,
+                },
+              }
+            ),
+            axios.get(
+              `https://api.assemblyai.com/v2/transcript/${transcriptId}/srt`,
+              {
+                headers: {
+                  authorization: process.env.ASSEMBLYAI_API_KEY,
+                },
+              }
+            ),
+          ]);
+
+          const sentences = sentencesResponse.data.sentences.map(
+            ({ text, start, end }) => ({
+              text,
+              start,
+              end,
+            })
+          );
+
+          console.log(sentences, srtResponse.data);
+
+          ws.send(
+            JSON.stringify({
+              event: "transcriptionSentences",
+              data: {
+                transcriptId,
+                sentences,
+              },
+            })
+          );
+
+          ws.send(
+            JSON.stringify({
+              event: "transcriptionSRT",
+              data: {
+                transcriptId,
+                data: srtResponse.data,
+              },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error("Error polling transcription progress:", error);

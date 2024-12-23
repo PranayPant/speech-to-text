@@ -1,3 +1,5 @@
+import { generateSRT } from "./srt.js";
+
 const socket = new WebSocket("ws://localhost:8000");
 
 socket.onopen = function (event) {
@@ -39,25 +41,15 @@ socket.onmessage = function (message) {
         });
         progressBar.appendChild(closeButton);
       }
-      if (typeof data === "string") {
-        progressBar.textContent = data;
-        progressBar.style.position = "fixed";
-        progressBar.style.top = "0";
-        progressBar.style.left = "0";
-        progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#0000FF";
-        progressBar.style.color = "white";
-        progressBar.style.textAlign = "center";
-        progressBar.style.padding = "10px";
-      } else if (typeof data === "number") {
-        progressBar.style.position = "fixed";
-        progressBar.style.top = "0";
-        progressBar.style.left = "0";
-        progressBar.style.width = "0";
-        progressBar.style.height = "5px";
-        progressBar.style.backgroundColor = "#0000FF";
-        progressBar.style.width = `${data}%`;
-      }
+      progressBar.textContent = data;
+      progressBar.style.position = "fixed";
+      progressBar.style.top = "0";
+      progressBar.style.left = "0";
+      progressBar.style.width = "100%";
+      progressBar.style.backgroundColor = "#0000FF";
+      progressBar.style.color = "white";
+      progressBar.style.textAlign = "center";
+      progressBar.style.padding = "10px";
       break;
     case "transcriptionComplete":
       if (!progressBar) {
@@ -66,55 +58,31 @@ socket.onmessage = function (message) {
         document.body.appendChild(progressBar);
       }
       progressBar.style.backgroundColor = "#008000";
-      const downloadLink = document.createElement("a");
-      downloadLink.style.display = "inline-block";
-      downloadLink.style.marginLeft = "16px";
-      downloadLink.style.padding = "10px 20px";
-      downloadLink.style.backgroundColor = "#4CAF50";
-      downloadLink.style.color = "white";
-      downloadLink.style.textDecoration = "none";
-      downloadLink.style.borderRadius = "5px";
-      downloadLink.href = URL.createObjectURL(
-        new Blob([data.text], { type: "text/plain" })
+      const downloadLinkContent = new Blob([data.text], { type: "text/plain" });
+      addDownloadButton(
+        progressBar,
+        "Download original transcript (Hindi)",
+        downloadLinkContent,
+        "transcription.txt"
       );
-      downloadLink.download = "transcription.txt";
-      downloadLink.textContent = "Download Transcription";
-      progressBar.appendChild(downloadLink);
-      downloadLink.addEventListener("click", function () {
-        document.body.removeChild(progressBar);
-      });
-      const downloadSubtitlesButton = document.createElement("button");
-      downloadSubtitlesButton.textContent = "Download Subtitles";
-      downloadSubtitlesButton.style.marginLeft = "16px";
-      downloadSubtitlesButton.style.padding = "10px 20px";
-      downloadSubtitlesButton.style.backgroundColor = "#4CAF50";
-      downloadSubtitlesButton.style.color = "white";
-      downloadSubtitlesButton.style.border = "none";
-      downloadSubtitlesButton.style.borderRadius = "5px";
-      downloadSubtitlesButton.style.cursor = "pointer";
-      downloadSubtitlesButton.addEventListener("click", async function () {
-        try {
-          const response = await fetch(
-            `https://api.assemblyai.com/v2/transcript/${data.transcriptId}/srt`,
-            { headers: { authorization: "a927b5ae663b4216a02cbe07a0de46cf" } }
-          );
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          const subtitles = await response.text();
-          const blob = new Blob([subtitles], { type: "text/plain" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "subtitles.txt";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        } catch (error) {
-          console.error("Failed to download subtitles:", error);
-        }
-      });
-      progressBar.appendChild(downloadSubtitlesButton);
+      break;
+    case "transcriptionSentences":
+      const srtContent = generateSRT(data.sentences);
+      addDownloadButton(
+        progressBar,
+        "Download modified SRT file (Hindi)",
+        srtContent,
+        "subtitles.en.srt"
+      );
+      break;
+    case "transcriptionSRT":
+      const srtFileContent = new Blob([data], { type: "text/plain" });
+      addDownloadButton(
+        progressBar,
+        "Download original SRT file (Hindi)",
+        srtFileContent,
+        "subtitles.hi.srt"
+      );
       break;
     default:
       console.log("Unknown event:", event);
@@ -168,4 +136,27 @@ function showSuccessBanner() {
 function removeSuccessBanner() {
   const banner = document.getElementById("success-banner");
   document.body.removeChild(banner);
+}
+
+function addDownloadButton(container, buttonText, content, filename) {
+  const button = document.createElement("button");
+  button.textContent = buttonText;
+  button.style.marginLeft = "16px";
+  button.style.padding = "10px 20px";
+  button.style.backgroundColor = "#4CAF50";
+  button.style.color = "white";
+  button.style.border = "none";
+  button.style.borderRadius = "5px";
+  button.style.cursor = "pointer";
+  button.addEventListener("click", function () {
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+  container.appendChild(button);
 }

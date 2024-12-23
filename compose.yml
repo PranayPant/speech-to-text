@@ -1,12 +1,29 @@
-version: "3.8"
-
 services:
   transcribe:
     build: ./transcribe-service
+    env_file:
+      - .env
     environment:
-      - ASSEMBLYAI_API_KEY=a927b5ae663b4216a02cbe07a0de46cf
+      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - TRANSCRIBE_PORT=${TRANSCRIBE_PORT:-8000}
     volumes:
       - ./data:/data
     ports:
       - "${TRANSCRIBE_PORT:-8000}:${TRANSCRIBE_PORT:-8000}"
+  translate:
+    build: ./translate-service
+    env_file:
+      - .env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TRANSLATE_PORT=${TRANSLATE_PORT:-8001}
+    volumes:
+      - ./data:/data
+    ports:
+      - "${TRANSLATE_PORT:-8001}:${TRANSLATE_PORT:-8001}"
+  web:
+    build: ./web
+    volumes:
+      - ./data:/data
+    ports:
+      - "${WEB_PORT:-8002}:80"
