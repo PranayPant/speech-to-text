@@ -76,7 +76,7 @@ socket.onmessage = function (message) {
       );
       break;
     case "transcriptionSRT":
-      const srtFileContent = new Blob([data], { type: "text/plain" });
+      const srtFileContent = new Blob([data.srtContent], { type: "text/plain" });
       addDownloadButton(
         progressBar,
         "Download original SRT file (Hindi)",

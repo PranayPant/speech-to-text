@@ -16,12 +16,10 @@ function formatTimestamp(ms) {
 // Function to generate SRT content from an array of subtitle objects
 export function generateSRT(subtitles) {
   return subtitles
-    .map((subtitle, index) => {
-      const startTime = formatTimestamp(subtitle.startTimeInMilliSeconds);
-      const endTime = formatTimestamp(subtitle.endTimeInMilliSeconds);
-      return `${index + 1}\n${startTime} --> ${endTime}\n${
-        subtitle.subtitleContent
-      }\n`;
+    .map(({ start, end, text }, index) => {
+      const startTime = formatTimestamp(start);
+      const endTime = formatTimestamp(end);
+      return `${index + 1}\n${startTime} --> ${endTime}\n${text}\n`;
     })
     .join("\n");
 }

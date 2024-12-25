@@ -206,8 +206,6 @@ async function pollTranscriptionProgress(transcriptId, ws) {
             })
           );
 
-          console.log(sentences, srtResponse.data);
-
           ws.send(
             JSON.stringify({
               event: "transcriptionSentences",
@@ -223,7 +221,7 @@ async function pollTranscriptionProgress(transcriptId, ws) {
               event: "transcriptionSRT",
               data: {
                 transcriptId,
-                data: srtResponse.data,
+                srtContent: srtResponse.data,
               },
             })
           );
