@@ -70,18 +70,30 @@ socket.onmessage = function (message) {
       const srtContent = generateSRT(data.sentences);
       addDownloadButton(
         progressBar,
-        "Download modified SRT file (Hindi)",
+        "Download SRT file split by sentences (Hindi)",
         srtContent,
-        "subtitles.en.srt"
+        "subtitles_split.hi.srt"
       );
       break;
     case "transcriptionSRT":
-      const srtFileContent = new Blob([data.srtContent], { type: "text/plain" });
+      const srtFileContent = new Blob([data.srtContent], {
+        type: "text/plain",
+      });
       addDownloadButton(
         progressBar,
         "Download original SRT file (Hindi)",
         srtFileContent,
         "subtitles.hi.srt"
+      );
+      break;
+    case "translationSRT":
+      console.log(data);
+      const srtContentEnglish = generateSRT(data.sentences);
+      addDownloadButton(
+        progressBar,
+        "Download SRT file (English)",
+        srtContentEnglish,
+        "subtitles.en.srt"
       );
       break;
     default:
@@ -100,6 +112,17 @@ export function sendVideoFile(file) {
     console.error("Error reading video file:", error);
   };
   reader.readAsArrayBuffer(file);
+}
+
+export function sendTranslateRequest(transcriptId) {
+  socket.send(
+    JSON.stringify({
+      event: "translate",
+      data: {
+        transcriptId,
+      },
+    })
+  );
 }
 
 function showSuccessBanner() {

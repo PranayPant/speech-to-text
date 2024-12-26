@@ -1,4 +1,4 @@
-import { sendVideoFile } from "./websocket.js";
+import { sendVideoFile, sendTranslateRequest } from "./websocket.js";
 
 document
   .getElementById("mediaInput")
@@ -29,6 +29,14 @@ function handleVideoUpload(event) {
     transcribeButton.className = "primary-action";
     transcribeButton.textContent = "Transcribe";
     transcribeButton.addEventListener("click", function () {
+      sendVideoFile(file);
+    });
+
+    const translateButton = document.createElement("button");
+    transcribeButton.disabled = true;
+    translateButton.className = "primary-action";
+    translateButton.textContent = "Translate";
+    translateButton.addEventListener("click", function () {
       sendVideoFile(file);
     });
 
