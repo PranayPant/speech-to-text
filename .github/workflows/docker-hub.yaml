@@ -24,4 +24,8 @@ jobs:
         with:
           push: true
           file: compose.yml
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/s2t:latest,${{ secrets.DOCKERHUB_USERNAME }}/s2t:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/web:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/transcribe:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/transcribe:${{ github.sha }}
