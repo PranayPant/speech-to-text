@@ -4,6 +4,11 @@ import fs from "fs";
 import https from "https";
 import http from "http";
 import ffmpeg from "fluent-ffmpeg";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const port = process.env.TRANSCRIBE_PORT || 8000;
 const server = http.createServer();
@@ -20,84 +25,145 @@ server.listen(port, () => {
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
-  ws.on("message", async (message) => {
-    let event, data;
-    if (typeof message === "string") {
-      ({ event, data } = JSON.parse(message));
-    } else {
-      event = "upload";
-      data = message;
-    }
+  ws.on("message", async (message, isBinary) => {
+    try {
+      let event, data, id;
 
-    if (event === "upload") {
-      try {
-        ws.send(
-          JSON.stringify({
-            event: "progress",
-            data: "Starting audio extraction...",
-          })
-        );
-        const filePath = "../../../data/uploaded_video.mp4";
-        fs.writeFileSync(filePath, data);
-
-        // Extract audio from the uploaded video
-        const audioPath = "../../../data/extracted_audio.mp3";
-        await extractAudio(filePath, audioPath);
-
-        ws.send(
-          JSON.stringify({
-            event: "progress",
-            data: "Audio extracted...",
-          })
-        );
-
-        // Upload the extracted audio to AssemblyAI
-        const response = await uploadToAssemblyAI(fs.readFileSync(audioPath));
-        const uploadUrl = response.data.upload_url;
-
-        ws.send(
-          JSON.stringify({
-            event: "progress",
-            data: "File uploaded to servers...",
-          })
-        );
-
-        // Request transcription from AssemblyAI
-        const transcriptResponse = await axios.post(
-          "https://api.assemblyai.com/v2/transcript",
-          {
-            audio_url: uploadUrl,
-            language_code: "hi",
-          },
-          {
-            headers: {
-              authorization: process.env.ASSEMBLYAI_API_KEY,
-              "content-type": "application/json",
-            },
-          }
-        );
-
-        const transcriptId = transcriptResponse.data.id;
-
-        console.log(
-          "Transcript Response:",
-          transcriptResponse.status,
-          transcriptResponse.data.status
-        );
-
-        ws.send(
-          JSON.stringify({
-            event: "progress",
-            data: "Transcription started...",
-          })
-        );
-
-        // Poll for transcription progress
-        pollTranscriptionProgress(transcriptId, ws);
-      } catch (error) {
-        console.error("Error processing message:", error);
-        ws.send(JSON.stringify({ event: "error", data: error.message }));
+      if (isBinary) {
+        event = "upload";
+        id = message.slice(0, 21).toString();
+        data = message.slice(21);
+      } else {
+        ({ event, data } = JSON.parse(message));
       }
+
+      if (event === "upload") {
+        try {
+          ws.send(
+            JSON.stringify({
+              event: "progress",
+              data: {
+                id,
+                message: "Uploading file to servers...",
+              },
+            })
+          );
+          const filePath = "../../../data/uploaded_video.mp4";
+          fs.writeFileSync(filePath, data);
+
+          // Extract audio from the uploaded video
+          const audioPath = "../../../data/extracted_audio.mp3";
+          await extractAudio(filePath, audioPath);
+
+          ws.send(
+            JSON.stringify({
+              event: "progress",
+              data: {
+                id,
+                message: "Audio extracted, uploading to AssemblyAI...",
+              },
+            })
+          );
+
+          // Upload the extracted audio to AssemblyAI
+          const response = await uploadToAssemblyAI(fs.readFileSync(audioPath));
+          const uploadUrl = response.data.upload_url;
+
+          ws.send(
+            JSON.stringify({
+              event: "progress",
+              data: {
+                id,
+                message: "Audio uploaded, starting transcription...",
+              },
+            })
+          );
+
+          // Request transcription from AssemblyAI
+          const transcriptResponse = await axios.post(
+            "https://api.assemblyai.com/v2/transcript",
+            {
+              audio_url: uploadUrl,
+              language_code: "hi",
+            },
+            {
+              headers: {
+                authorization: process.env.ASSEMBLYAI_API_KEY,
+                "content-type": "application/json",
+              },
+            }
+          );
+
+          const transcriptId = transcriptResponse.data.id;
+
+          ws.send(
+            JSON.stringify({
+              event: "progress",
+              data: {
+                id,
+                message: "Transcription started, polling for progress...",
+                transcriptId,
+              },
+            })
+          );
+
+          // Poll for transcription progress
+          pollTranscriptionProgress(transcriptId, ws, id);
+        } catch (error) {
+          console.error("Error processing message:", error);
+          ws.send(JSON.stringify({ event: "error", data: error.message }));
+        }
+      } else if (event === "translate") {
+        try {
+          const { transcriptId, id } = data;
+          console.log("Translating transcript...", transcriptId);
+
+          const sentencesResponse = await axios.get(
+            `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
+            {
+              headers: {
+                authorization: process.env.ASSEMBLYAI_API_KEY,
+              },
+            }
+          );
+          const sentences = sentencesResponse.data.sentences.map(
+            ({ text, start, end }) => ({
+              text,
+              start,
+              end,
+            })
+          );
+          const translationResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "developer",
+                content:
+                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Leaving aside any Sanskrit quotes, translate the text into English and output a new array. Only include the array in the response so that it can be easily parsed by the client.",
+              },
+              { role: "user", content: JSON.stringify(sentences) },
+            ],
+          });
+          const chatGPTResponse =
+            translationResponse.choices[0].message.content.trim();
+          ws.send(
+            JSON.stringify({
+              event: "translationSuccess",
+              data: {
+                transcriptId,
+                sentences: JSON.parse(chatGPTResponse),
+                id,
+              },
+            })
+          );
+        } catch (error) {
+          console.error("Error translating transcript:", error);
+          ws.send(JSON.stringify({ event: "error", data: error.message }));
+        }
+      }
+    } catch (error) {
+      console.error("Error handling message:", error);
+      ws.send(JSON.stringify({ event: "error", data: error.message }));
     }
   });
 
@@ -141,7 +207,7 @@ async function uploadToAssemblyAI(binaryData) {
   return response;
 }
 
-async function pollTranscriptionProgress(transcriptId, ws) {
+async function pollTranscriptionProgress(transcriptId, ws, id) {
   const interval = setInterval(async () => {
     try {
       const response = await axios.get(
@@ -157,20 +223,80 @@ async function pollTranscriptionProgress(transcriptId, ws) {
       ws.send(
         JSON.stringify({
           event: "progress",
-          data: `Transcription status: ${status}`,
+          data: {
+            id,
+            message: `Transcription status: ${status}`,
+            transcriptId,
+          },
         })
       );
-
-      console.log("Polling Response:", response.status, status);
 
       if (status === "completed" || status === "failed") {
         clearInterval(interval);
         ws.send(
           JSON.stringify({
-            event: "transcriptionComplete",
-            data: response.data,
+            event:
+              status === "completed"
+                ? "transcriptionComplete"
+                : "transcriptionFailed",
+            data: {
+              transcriptId,
+              text: response.data.text,
+              id,
+            },
           })
         );
+
+        if (status === "completed") {
+          const [sentencesResponse, srtResponse] = await Promise.all([
+            axios.get(
+              `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
+              {
+                headers: {
+                  authorization: process.env.ASSEMBLYAI_API_KEY,
+                },
+              }
+            ),
+            axios.get(
+              `https://api.assemblyai.com/v2/transcript/${transcriptId}/srt`,
+              {
+                headers: {
+                  authorization: process.env.ASSEMBLYAI_API_KEY,
+                },
+              }
+            ),
+          ]);
+
+          const sentences = sentencesResponse.data.sentences.map(
+            ({ text, start, end }) => ({
+              text,
+              start,
+              end,
+            })
+          );
+
+          ws.send(
+            JSON.stringify({
+              event: "transcriptionSentences",
+              data: {
+                transcriptId,
+                sentences,
+                id,
+              },
+            })
+          );
+
+          ws.send(
+            JSON.stringify({
+              event: "transcriptionSRT",
+              data: {
+                transcriptId,
+                srtContent: srtResponse.data,
+                id,
+              },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error("Error polling transcription progress:", error);
