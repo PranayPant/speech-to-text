@@ -1,4 +1,5 @@
-import { sendVideoFile, sendTranslateRequest } from "./websocket.js";
+import { sendTranscribeRequest, sendTranslateRequest } from "./websocket.js";
+import { nanoid } from "./nanoid.js";
 
 document
   .getElementById("mediaInput")
@@ -12,6 +13,7 @@ function handleVideoUpload(event) {
   const videoContainer = document.getElementById("videoContainer");
 
   for (let i = 0; i < files.length; i++) {
+    const id = nanoid();
     const file = files[i];
     const videoElement = document.createElement("video");
     videoElement.controls = true;
@@ -26,22 +28,30 @@ function handleVideoUpload(event) {
     deleteIcon.alt = "Delete";
 
     const transcribeButton = document.createElement("button");
+    transcribeButton.id = `transcribe-${id}`;
     transcribeButton.className = "primary-action";
     transcribeButton.textContent = "Transcribe";
     transcribeButton.addEventListener("click", function () {
-      sendVideoFile(file);
+      console.log("transcribeButton clicked", file, id);
+      sendTranscribeRequest(file, id);
     });
 
     const translateButton = document.createElement("button");
-    transcribeButton.disabled = true;
+    translateButton.id = `translate-${id}`;
+    translateButton.disabled = true;
     translateButton.className = "primary-action";
     translateButton.textContent = "Translate";
     translateButton.addEventListener("click", function () {
-      sendVideoFile(file);
+      sendTranslateRequest(
+        document
+          .getElementById(`transcribe-${id}`)
+          .getAttribute("data-transcript-id")
+      );
     });
 
     videoCard.appendChild(deleteIcon);
     videoCard.appendChild(transcribeButton);
+    videoCard.appendChild(translateButton);
     videoContainer.appendChild(videoCard);
   }
 }

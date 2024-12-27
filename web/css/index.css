@@ -94,3 +94,9 @@ body main {
   align-items: center;
   gap: 10px;
 }
+button:disabled,
+.video-card .primary-action:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}

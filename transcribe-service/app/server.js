@@ -27,10 +27,12 @@ wss.on("connection", (ws) => {
 
   ws.on("message", async (message, isBinary) => {
     try {
-      let event, data;
+      let event, data, id;
+
       if (isBinary) {
         event = "upload";
-        data = message;
+        id = message.slice(0, 21).toString();
+        data = message.slice(21);
       } else {
         ({ event, data } = JSON.parse(message));
       }
@@ -40,7 +42,10 @@ wss.on("connection", (ws) => {
           ws.send(
             JSON.stringify({
               event: "progress",
-              data: "Starting audio extraction...",
+              data: {
+                id,
+                message: "Uploading file to servers...",
+              },
             })
           );
           const filePath = "../../../data/uploaded_video.mp4";
@@ -53,7 +58,10 @@ wss.on("connection", (ws) => {
           ws.send(
             JSON.stringify({
               event: "progress",
-              data: "Audio extracted, uploading to servers...",
+              data: {
+                id,
+                message: "Audio extracted, uploading to AssemblyAI...",
+              },
             })
           );
 
@@ -64,7 +72,10 @@ wss.on("connection", (ws) => {
           ws.send(
             JSON.stringify({
               event: "progress",
-              data: "File uploaded to servers, getting transcription...",
+              data: {
+                id,
+                message: "Audio uploaded, starting transcription...",
+              },
             })
           );
 
@@ -85,28 +96,26 @@ wss.on("connection", (ws) => {
 
           const transcriptId = transcriptResponse.data.id;
 
-          console.log(
-            "Transcript Response:",
-            transcriptResponse.status,
-            transcriptResponse.data.status
-          );
-
           ws.send(
             JSON.stringify({
               event: "progress",
-              data: "Transcription started...",
+              data: {
+                id,
+                message: "Transcription started, polling for progress...",
+                transcriptId,
+              },
             })
           );
 
           // Poll for transcription progress
-          pollTranscriptionProgress(transcriptId, ws);
+          pollTranscriptionProgress(transcriptId, ws, id);
         } catch (error) {
           console.error("Error processing message:", error);
           ws.send(JSON.stringify({ event: "error", data: error.message }));
         }
       } else if (event === "translate") {
         try {
-          const { transcriptId } = data;
+          const { transcriptId, id } = data;
           const sentencesResponse = await axios.get(
             `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
             {
@@ -128,7 +137,7 @@ wss.on("connection", (ws) => {
               {
                 role: "developer",
                 content:
-                  "You are given a stringified JSON array that represents a timestamped Hindi transcript. Translate the text into English and output a new array",
+                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains Sanskrit quotes. Translate the text into English, isolating Sanskrit quotes and output a new array",
               },
               { role: "user", content: JSON.stringify(sentences) },
               {
@@ -145,7 +154,8 @@ wss.on("connection", (ws) => {
               event: "translationSuccess",
               data: {
                 transcriptId,
-                sentences: chatGPTResponse,
+                sentences: JSON.parse(chatGPTResponse),
+                id,
               },
             })
           );
@@ -200,7 +210,7 @@ async function uploadToAssemblyAI(binaryData) {
   return response;
 }
 
-async function pollTranscriptionProgress(transcriptId, ws) {
+async function pollTranscriptionProgress(transcriptId, ws, id) {
   const interval = setInterval(async () => {
     try {
       const response = await axios.get(
@@ -216,11 +226,13 @@ async function pollTranscriptionProgress(transcriptId, ws) {
       ws.send(
         JSON.stringify({
           event: "progress",
-          data: `Transcription status: ${status}`,
+          data: {
+            id,
+            message: `Transcription status: ${status}`,
+            transcriptId,
+          },
         })
       );
-
-      console.log("Polling Response:", response.status, status);
 
       if (status === "completed" || status === "failed") {
         clearInterval(interval);
@@ -233,6 +245,7 @@ async function pollTranscriptionProgress(transcriptId, ws) {
             data: {
               transcriptId,
               text: response.data.text,
+              id,
             },
           })
         );
@@ -271,6 +284,7 @@ async function pollTranscriptionProgress(transcriptId, ws) {
               data: {
                 transcriptId,
                 sentences,
+                id,
               },
             })
           );
@@ -281,6 +295,7 @@ async function pollTranscriptionProgress(transcriptId, ws) {
               data: {
                 transcriptId,
                 srtContent: srtResponse.data,
+                id,
               },
             })
           );

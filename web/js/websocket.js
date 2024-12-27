@@ -41,7 +41,7 @@ socket.onmessage = function (message) {
         });
         progressBar.appendChild(closeButton);
       }
-      progressBar.textContent = data;
+      progressBar.textContent = data.message;
       progressBar.style.position = "fixed";
       progressBar.style.top = "0";
       progressBar.style.left = "0";
@@ -58,7 +58,11 @@ socket.onmessage = function (message) {
         document.body.appendChild(progressBar);
       }
       progressBar.style.backgroundColor = "#008000";
+      console.log(data);
+      const transcribeButton = document.getElementById(`transcribe-${data.id}`);
+      transcribeButton.setAttribute("data-transcript-id", data.transcriptId);
       const downloadLinkContent = new Blob([data.text], { type: "text/plain" });
+      document.getElementById(`translate-${data.id}`).disabled = false;
       addDownloadButton(
         progressBar,
         "Download original transcript (Hindi)",
@@ -96,15 +100,29 @@ socket.onmessage = function (message) {
         "subtitles.en.srt"
       );
       break;
+    case "translationSuccess":
+      console.log(data);
+      const srtContentTranslation = generateSRT(data.sentences);
+      const blob = new Blob([srtContentTranslation], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = 'subtitles.en.srt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      break;
     default:
       console.log("Unknown event:", event);
   }
 };
 
-export function sendVideoFile(file) {
+export function sendTranscribeRequest(file, id) {
   const reader = new FileReader();
   reader.onload = function (event) {
-    const arrayBuffer = event.target.result;
+    const dataBuffer = event.target.result;
+    const idBuffer = new Blob([id], { type: "text/plain" });
+    const arrayBuffer = new Blob([idBuffer, dataBuffer]);
     socket.send(arrayBuffer);
     console.log("Video file data sent");
   };
@@ -114,12 +132,13 @@ export function sendVideoFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-export function sendTranslateRequest(transcriptId) {
+export function sendTranslateRequest(transcriptId, id) {
   socket.send(
     JSON.stringify({
       event: "translate",
       data: {
         transcriptId,
+        id,
       },
     })
   );
