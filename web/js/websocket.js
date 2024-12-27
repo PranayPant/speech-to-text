@@ -58,9 +58,9 @@ socket.onmessage = function (message) {
         document.body.appendChild(progressBar);
       }
       progressBar.style.backgroundColor = "#008000";
-      console.log(data);
       const transcribeButton = document.getElementById(`transcribe-${data.id}`);
       transcribeButton.setAttribute("data-transcript-id", data.transcriptId);
+      transcribeButton.removeAttribute("data-loading");
       const downloadLinkContent = new Blob([data.text], { type: "text/plain" });
       document.getElementById(`translate-${data.id}`).disabled = false;
       addDownloadButton(
@@ -102,12 +102,14 @@ socket.onmessage = function (message) {
       break;
     case "translationSuccess":
       console.log(data);
+      const translateButton = document.getElementById(`translate-${data.id}`);
+      translateButton.removeAttribute("data-loading");
       const srtContentTranslation = generateSRT(data.sentences);
       const blob = new Blob([srtContentTranslation], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = 'subtitles.en.srt';
+      a.download = "subtitles.en.srt";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -118,6 +120,8 @@ socket.onmessage = function (message) {
 };
 
 export function sendTranscribeRequest(file, id) {
+  const transcribeButton = document.getElementById(`transcribe-${id}`);
+  transcribeButton.setAttribute("data-loading", "true");
   const reader = new FileReader();
   reader.onload = function (event) {
     const dataBuffer = event.target.result;
@@ -133,6 +137,8 @@ export function sendTranscribeRequest(file, id) {
 }
 
 export function sendTranslateRequest(transcriptId, id) {
+  const translateButton = document.getElementById(`translate-${id}`);
+  translateButton.setAttribute("data-loading", "true");
   socket.send(
     JSON.stringify({
       event: "translate",

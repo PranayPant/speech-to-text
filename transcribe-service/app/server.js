@@ -116,6 +116,8 @@ wss.on("connection", (ws) => {
       } else if (event === "translate") {
         try {
           const { transcriptId, id } = data;
+          console.log("Translating transcript...", transcriptId);
+
           const sentencesResponse = await axios.get(
             `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
             {
@@ -132,19 +134,14 @@ wss.on("connection", (ws) => {
             })
           );
           const translationResponse = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             messages: [
               {
                 role: "developer",
                 content:
-                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains Sanskrit quotes. Translate the text into English, isolating Sanskrit quotes and output a new array",
+                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Leaving aside any Sanskrit quotes, translate the text into English and output a new array. Only include the array in the response so that it can be easily parsed by the client.",
               },
               { role: "user", content: JSON.stringify(sentences) },
-              {
-                role: "developer",
-                content:
-                  "Split each segment with longer than 80 characters in text into subsequent segments with appropriate timestamps",
-              },
             ],
           });
           const chatGPTResponse =
