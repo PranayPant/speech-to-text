@@ -15,5 +15,5 @@ services:
       - ./data:/data
     ports:
       - 8002:80
-    environment:
-      - APP_ENV=${APP_ENV}
+    depends_on:
+      - transcribe

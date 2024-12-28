@@ -1,8 +1,8 @@
 # Use the official Nginx image as the base image
 FROM nginx:alpine
 
-# Copy the content of the current directory to /usr/share/nginx/html
-COPY . /usr/share/nginx/html
+COPY ./app /usr/share/nginx/html
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
 # Expose port 80
 EXPOSE 80
