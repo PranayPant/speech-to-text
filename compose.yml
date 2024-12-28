@@ -1,8 +1,6 @@
 services:
   transcribe:
     build: ./transcribe-service
-    env_file:
-      - .env
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
