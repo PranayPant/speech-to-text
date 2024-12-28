@@ -1,6 +1,6 @@
 import { generateSRT } from "./srt.js";
 
-const socket = new WebSocket("ws://localhost:8000");
+const socket = new WebSocket("ws://transcribe:8000");
 
 socket.onopen = function (event) {
   console.log("WebSocket connection established:", event);
