@@ -12,10 +12,10 @@ const openai = new OpenAI({
 
 const port = process.env.TRANSCRIBE_PORT || 8000;
 const server = http.createServer();
-const MAX_PAYLOAD_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_PAYLOAD_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB
 const wss = new WebSocketServer({
   server,
-  maxPayload: MAX_PAYLOAD_SIZE * 1024,
+  maxPayload: MAX_PAYLOAD_SIZE,
 });
 
 server.listen(port, () => {
@@ -139,7 +139,7 @@ wss.on("connection", (ws) => {
               {
                 role: "developer",
                 content:
-                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Leaving aside any Sanskrit quotes, translate the text into English and output a new array. Only include the array in the response so that it can be easily parsed by the client.",
+                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Translate the text into English, skipping any quotations in Sanskrit, and return the modified array. Only include the array in the response so that it can be easily parsed by the client.",
               },
               { role: "user", content: JSON.stringify(sentences) },
             ],
