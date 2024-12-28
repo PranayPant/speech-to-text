@@ -4,14 +4,14 @@ services:
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TRANSCRIBE_PORT=${TRANSCRIBE_PORT:-8000}
+      - TRANSCRIBE_PORT=8000
     volumes:
       - ./data:/data
     ports:
-      - "${TRANSCRIBE_PORT:-8000}:${TRANSCRIBE_PORT:-8000}"
+      - 8000:8000
   web:
     build: ./web
     volumes:
       - ./data:/data
     ports:
-      - "${WEB_PORT:-8002}:80"
+      - 8002:80
