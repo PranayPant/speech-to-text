@@ -1,9 +1,6 @@
 import { generateSRT } from "./srt.js";
 
-const host =
-  window.location.hostname === "localhost"
-    ? "localhost:8000"
-    : window.location.hostname;
+const host = window.location.host;
 const protocol = window.location.hostname === "localhost" ? "ws" : "wss";
 const socket = new WebSocket(`${protocol}://${host}/ws/`);
 

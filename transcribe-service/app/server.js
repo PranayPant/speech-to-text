@@ -19,7 +19,7 @@ const wss = new WebSocketServer({
 });
 
 server.listen(port, () => {
-  console.log(`WebSocket server is running on ws://localhost:${port}`);
+  console.log(`WebSocket server is running on port ${port}`);
 });
 
 wss.on("connection", (ws) => {
