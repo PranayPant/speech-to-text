@@ -114,6 +114,15 @@ socket.onmessage = function (message) {
       a.click();
       document.body.removeChild(a);
       break;
+    case "error":
+      if (!progressBar) {
+        progressBar = document.createElement("div");
+        progressBar.id = "progress-bar";
+        document.body.appendChild(progressBar);
+      }
+      progressBar.style.backgroundColor = "#CC0000"; // Web safe color
+      progressBar.textContent = data;
+      break;
     default:
       console.log("Unknown event:", event);
   }
