@@ -5,17 +5,11 @@ services:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TRANSCRIBE_PORT=8000
-    volumes:
-      - data:/app/data
     ports:
       - 8000:8000
   web:
     build: ./web
-    volumes:
-      - data:/app/data
     ports:
       - 8002:80
     depends_on:
       - transcribe
-volumes:
-  data:

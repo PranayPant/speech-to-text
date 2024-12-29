@@ -48,11 +48,11 @@ wss.on("connection", (ws) => {
               },
             })
           );
-          const filePath = "../../../data/uploaded_video.mp4";
+          const filePath = "./uploaded_video.mp4";
           fs.writeFileSync(filePath, data);
 
           // Extract audio from the uploaded video
-          const audioPath = "../../../data/extracted_audio.mp3";
+          const audioPath = "./extracted_audio.mp3";
           await extractAudio(filePath, audioPath);
 
           ws.send(
