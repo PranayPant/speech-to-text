@@ -1,6 +1,10 @@
 import { generateSRT } from "./srt.js";
 
-const socket = new WebSocket(`ws://${window.location.host}/ws/`);
+const host =
+  window.location.hostname === "localhost"
+    ? "localhost:8000"
+    : window.location.hostname;
+const socket = new WebSocket(`ws://${host}/ws/`);
 
 socket.onopen = function (event) {
   console.log("WebSocket connection established:", event);
