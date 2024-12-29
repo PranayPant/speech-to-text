@@ -4,7 +4,8 @@ const host =
   window.location.hostname === "localhost"
     ? "localhost:8000"
     : window.location.hostname;
-const socket = new WebSocket(`ws://${host}/ws/`);
+const protocol = window.location.hostname === "localhost" ? "ws" : "wss";
+const socket = new WebSocket(`${protocol}://${host}/ws/`);
 
 socket.onopen = function (event) {
   console.log("WebSocket connection established:", event);
