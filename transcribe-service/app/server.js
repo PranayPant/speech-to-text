@@ -1,17 +1,79 @@
 import WebSocket, { WebSocketServer } from "ws";
 import axios from "axios";
 import fs from "fs";
+import url from "url";
 import https from "https";
 import http from "http";
 import ffmpeg from "fluent-ffmpeg";
 import OpenAI from "openai";
+
+import { uploadExtractedAudio } from "./upload.js";
+import { transcribeAudio } from "./transcribe.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const port = process.env.TRANSCRIBE_PORT || 8000;
-const server = http.createServer();
+const server = http.createServer((req, res) => {
+  if (req.method !== "POST") {
+    res.writeHead(405, { "Content-Type": "text/plain" });
+    res.end("Method Not Allowed");
+    return;
+  }
+
+  switch (req.url) {
+    case "/upload": {
+      let data = [];
+      req.on("data", (chunk) => {
+        data.push(chunk);
+      });
+      req.on("end", async () => {
+        const binaryData = Buffer.concat(data);
+        const uploadUrl = await uploadExtractedAudio(binaryData);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ uploadUrl }));
+      });
+      break;
+    }
+    case "/transcribe": {
+      let data = "";
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+      req.on("end", async () => {
+        const parsedData = JSON.parse(data);
+        const { uploadUrl } = parsedData;
+        try {
+          const transcriptId = await transcribeAudio(uploadUrl);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ transcriptId }));
+        } catch (error) {
+          console.error("Error during transcription:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      break;
+    }
+    case "/test": {
+      let data = "";
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+      req.on("end", () => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(data);
+      });
+      break;
+    }
+    default: {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Not Found");
+      break;
+    }
+  }
+});
 const MAX_PAYLOAD_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB
 const wss = new WebSocketServer({
   server,
@@ -22,8 +84,9 @@ server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
 
-wss.on("connection", (ws) => {
+wss.on("connection", (ws, req) => {
   console.log("Client connected");
+  console.log("Headers", req.headers);
 
   ws.on("message", async (message, isBinary) => {
     try {
@@ -44,68 +107,26 @@ wss.on("connection", (ws) => {
               event: "progress",
               data: {
                 id,
-                message: "Uploading file to servers...",
+                message:
+                  "Extracting audio and uploading media file for processing...",
               },
             })
           );
-          const filePath = "./uploaded_video.mp4";
-          fs.writeFileSync(filePath, data);
 
-          // Extract audio from the uploaded video
-          const audioPath = "./extracted_audio.mp3";
-          await extractAudio(filePath, audioPath);
+          const uploadUrl = await uploadExtractedAudio(data);
 
           ws.send(
             JSON.stringify({
               event: "progress",
               data: {
                 id,
-                message: "Audio extracted, uploading to AssemblyAI...",
-              },
-            })
-          );
-
-          // Upload the extracted audio to AssemblyAI
-          const response = await uploadToAssemblyAI(fs.readFileSync(audioPath));
-          const uploadUrl = response.data.upload_url;
-
-          ws.send(
-            JSON.stringify({
-              event: "progress",
-              data: {
-                id,
-                message: "Audio uploaded, starting transcription...",
+                message: "Audio uploaded, starting transcription process...",
               },
             })
           );
 
           // Request transcription from AssemblyAI
-          const transcriptResponse = await axios.post(
-            "https://api.assemblyai.com/v2/transcript",
-            {
-              audio_url: uploadUrl,
-              language_code: "hi",
-            },
-            {
-              headers: {
-                authorization: process.env.ASSEMBLYAI_API_KEY,
-                "content-type": "application/json",
-              },
-            }
-          );
-
-          const transcriptId = transcriptResponse.data.id;
-
-          ws.send(
-            JSON.stringify({
-              event: "progress",
-              data: {
-                id,
-                message: "Transcription started, polling for progress...",
-                transcriptId,
-              },
-            })
-          );
+          const transcriptId = await transcribeAudio(uploadUrl);
 
           // Poll for transcription progress
           pollTranscriptionProgress(transcriptId, ws, id);
@@ -171,41 +192,6 @@ wss.on("connection", (ws) => {
     console.log("Client disconnected");
   });
 });
-
-async function extractAudio(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .output(outputPath)
-      .audioCodec("libmp3lame")
-      .audioQuality(0) // Highest quality
-      .on("end", resolve)
-      .on("error", reject)
-      .run();
-  });
-}
-
-async function uploadToAssemblyAI(binaryData) {
-  const apiKey = process.env.ASSEMBLYAI_API_KEY;
-  const url = "https://api.assemblyai.com/v2/upload";
-  console.log("Uploading audio to AssemblyAI...");
-  const startTime = Date.now();
-
-  const response = await axios.post(url, binaryData, {
-    headers: {
-      authorization: apiKey,
-      "content-type": "application/octet-stream",
-    },
-    maxBodyLength: MAX_PAYLOAD_SIZE,
-  });
-
-  const endTime = Date.now();
-
-  const uploadTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
-  console.log(`Audio uploaded to AssemblyAI in ${uploadTimeInSeconds} seconds`);
-  console.log("Response:", response.status, response.data);
-
-  return response;
-}
 
 async function pollTranscriptionProgress(transcriptId, ws, id) {
   const interval = setInterval(async () => {
