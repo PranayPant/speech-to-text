@@ -1,14 +1,12 @@
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import axios from "axios";
-import fs from "fs";
-import url from "url";
-import https from "https";
 import http from "http";
-import ffmpeg from "fluent-ffmpeg";
 import OpenAI from "openai";
 
 import { uploadExtractedAudio } from "./upload.js";
-import { transcribeAudio } from "./transcribe.js";
+import { getTranscription, transcribeAudio } from "./transcribe.js";
+import { MAX_PAYLOAD_SIZE } from "./constants.js";
+import { translateSentences } from "./translate.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -29,10 +27,16 @@ const server = http.createServer((req, res) => {
         data.push(chunk);
       });
       req.on("end", async () => {
-        const binaryData = Buffer.concat(data);
-        const uploadUrl = await uploadExtractedAudio(binaryData);
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ uploadUrl }));
+        try {
+          const binaryData = Buffer.concat(data);
+          const uploadUrl = await uploadExtractedAudio(binaryData);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ uploadUrl }));
+        } catch (error) {
+          console.error("Error during upload:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
       });
       break;
     }
@@ -45,11 +49,43 @@ const server = http.createServer((req, res) => {
         const parsedData = JSON.parse(data);
         const { uploadUrl } = parsedData;
         try {
-          const transcriptId = await transcribeAudio(uploadUrl);
+          const transcriptId = await transcribeAudio({
+            audio_url: uploadUrl,
+          });
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ transcriptId }));
         } catch (error) {
           console.error("Error during transcription:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      break;
+    }
+    case "/transcript": {
+      let data = "";
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+      req.on("end", async () => {
+        const parsedData = JSON.parse(data);
+        const {
+          transcriptId,
+          includeSRT,
+          includeTranscript,
+          includeSentences,
+        } = parsedData;
+        try {
+          const transcript = await getTranscription({
+            transcriptId,
+            includeTranscript,
+            includeSentences,
+            includeSRT,
+          });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(transcript));
+        } catch (error) {
+          console.error("Error fetching transcript:", error);
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: error.message }));
         }
@@ -63,7 +99,7 @@ const server = http.createServer((req, res) => {
       });
       req.on("end", () => {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(data);
+        res.end(data + "\n");
       });
       break;
     }
@@ -74,13 +110,13 @@ const server = http.createServer((req, res) => {
     }
   }
 });
-const MAX_PAYLOAD_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB
+
 const wss = new WebSocketServer({
   server,
   maxPayload: MAX_PAYLOAD_SIZE,
 });
 
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
 
@@ -100,8 +136,8 @@ wss.on("connection", (ws, req) => {
         ({ event, data } = JSON.parse(message));
       }
 
-      if (event === "upload") {
-        try {
+      switch (event) {
+        case "upload":
           ws.send(
             JSON.stringify({
               event: "progress",
@@ -126,61 +162,51 @@ wss.on("connection", (ws, req) => {
           );
 
           // Request transcription from AssemblyAI
-          const transcriptId = await transcribeAudio(uploadUrl);
+          const transcriptId = await transcribeAudio({
+            audio_url: uploadUrl,
+          });
 
-          // Poll for transcription progress
-          pollTranscriptionProgress(transcriptId, ws, id);
-        } catch (error) {
-          console.error("Error processing message:", error);
-          ws.send(JSON.stringify({ event: "error", data: error.message }));
-        }
-      } else if (event === "translate") {
-        try {
-          const { transcriptId, id } = data;
-          console.log("Translating transcript...", transcriptId);
-
-          const sentencesResponse = await axios.get(
-            `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
-            {
-              headers: {
-                authorization: process.env.ASSEMBLYAI_API_KEY,
+          ws.send(
+            JSON.stringify({
+              event: "transcriptionQueued",
+              data: {
+                id,
+                transcriptId,
+                message: "Transcription process started.",
               },
-            }
-          );
-          const sentences = sentencesResponse.data.sentences.map(
-            ({ text, start, end }) => ({
-              text,
-              start,
-              end,
             })
           );
-          const translationResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "developer",
-                content:
-                  "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Translate the text into English, skipping any quotations in Sanskrit, and return the modified array. Only include the array in the response so that it can be easily parsed by the client.",
-              },
-              { role: "user", content: JSON.stringify(sentences) },
-            ],
-          });
-          const chatGPTResponse =
-            translationResponse.choices[0].message.content.trim();
+          break;
+
+        case "pollTranscription":
+          const { transcriptId: checkTranscriptId, id } = data;
+          console.log("Checking transcription status...", checkTranscriptId);
+          await getTranscriptionProgress(checkTranscriptId, ws, id);
+          break;
+
+        case "translate":
+          const { sentences } = translateSentences(data);
+          const srt = generateSRT(sentences);
           ws.send(
             JSON.stringify({
               event: "translationSuccess",
               data: {
-                transcriptId,
-                sentences: JSON.parse(chatGPTResponse),
-                id,
+                id: data.id,
+                transcriptId: data.transcriptId,
+                sentences,
+                srt,
               },
             })
           );
-        } catch (error) {
-          console.error("Error translating transcript:", error);
-          ws.send(JSON.stringify({ event: "error", data: error.message }));
-        }
+          break;
+        default:
+          ws.send(
+            JSON.stringify({
+              event: "error",
+              data: `Unknown event: ${event}`,
+            })
+          );
+          break;
       }
     } catch (error) {
       console.error("Error handling message:", error);
@@ -193,101 +219,65 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-async function pollTranscriptionProgress(transcriptId, ws, id) {
-  const interval = setInterval(async () => {
-    try {
-      const response = await axios.get(
-        `https://api.assemblyai.com/v2/transcript/${transcriptId}`,
-        {
-          headers: {
-            authorization: process.env.ASSEMBLYAI_API_KEY,
-          },
-        }
-      );
+async function getTranscriptionProgress(transcriptId, ws, id) {
+  try {
+    const { status } = getTranscription({
+      transcriptId,
+      includeTranscript: true,
+      includeSentences: false,
+      includeSRT: false,
+    });
 
-      const status = response.data.status;
+    ws.send(
+      JSON.stringify({
+        event: "progress",
+        data: {
+          id,
+          message: `Transcription status: ${status}`,
+          transcriptId,
+        },
+      })
+    );
+
+    if (status === "failed") {
       ws.send(
         JSON.stringify({
-          event: "progress",
+          event: "transcriptionFailed",
           data: {
-            id,
-            message: `Transcription status: ${status}`,
             transcriptId,
+            text: "Transcription failed",
+            id,
           },
         })
       );
+    } else if (status === "completed") {
+      const { text, sentences, srt } = getTranscription({
+        transcriptId,
+        includeTranscript: true,
+        includeSentences: false,
+        includeSRT: false,
+      });
 
-      if (status === "completed" || status === "failed") {
-        clearInterval(interval);
-        ws.send(
-          JSON.stringify({
-            event:
-              status === "completed"
-                ? "transcriptionComplete"
-                : "transcriptionFailed",
-            data: {
-              transcriptId,
-              text: response.data.text,
-              id,
-            },
-          })
-        );
-
-        if (status === "completed") {
-          const [sentencesResponse, srtResponse] = await Promise.all([
-            axios.get(
-              `https://api.assemblyai.com/v2/transcript/${transcriptId}/sentences`,
-              {
-                headers: {
-                  authorization: process.env.ASSEMBLYAI_API_KEY,
-                },
-              }
-            ),
-            axios.get(
-              `https://api.assemblyai.com/v2/transcript/${transcriptId}/srt`,
-              {
-                headers: {
-                  authorization: process.env.ASSEMBLYAI_API_KEY,
-                },
-              }
-            ),
-          ]);
-
-          const sentences = sentencesResponse.data.sentences.map(
-            ({ text, start, end }) => ({
-              text,
-              start,
-              end,
-            })
-          );
-
-          ws.send(
-            JSON.stringify({
-              event: "transcriptionSentences",
-              data: {
-                transcriptId,
-                sentences,
-                id,
-              },
-            })
-          );
-
-          ws.send(
-            JSON.stringify({
-              event: "transcriptionSRT",
-              data: {
-                transcriptId,
-                srtContent: srtResponse.data,
-                id,
-              },
-            })
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error polling transcription progress:", error);
-      ws.send(JSON.stringify({ event: "error", data: error.message }));
-      clearInterval(interval);
+      ws.send(
+        JSON.stringify({
+          event: "transcriptionComplete",
+          data: {
+            transcriptId,
+            text,
+            sentences,
+            srt,
+            id,
+          },
+        })
+      );
     }
-  }, 5000); // Poll every 5 seconds
+  } catch (error) {
+    console.error("Error polling transcription progress:", error);
+    ws.send(
+      JSON.stringify({
+        event: "error",
+        data: `Error polling transcription progress: ${error.message}`,
+      })
+    );
+  }
 }
