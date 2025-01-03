@@ -65,9 +65,9 @@ export async function getTranscriptionProgress(transcriptId, ws, id) {
 
     ws.send(
       JSON.stringify({
-        event: "progress",
+        event: "transcriptionInProgress",
+        id,
         data: {
-          id,
           message: `Transcription status: ${status}`,
           transcriptId,
         },
@@ -78,10 +78,10 @@ export async function getTranscriptionProgress(transcriptId, ws, id) {
       ws.send(
         JSON.stringify({
           event: "transcriptionFailed",
+          id,
           data: {
             transcriptId,
             text: "Transcription failed",
-            id,
           },
         })
       );
@@ -96,12 +96,12 @@ export async function getTranscriptionProgress(transcriptId, ws, id) {
       ws.send(
         JSON.stringify({
           event: "transcriptionComplete",
+          id,
           data: {
             transcriptId,
             text,
             sentences,
             srt,
-            id,
           },
         })
       );
@@ -111,6 +111,7 @@ export async function getTranscriptionProgress(transcriptId, ws, id) {
     ws.send(
       JSON.stringify({
         event: "error",
+        id,
         data: `Error polling transcription progress: ${error.message}`,
       })
     );

@@ -21,4 +21,4 @@ RUN apk add --no-cache openssl && \
 RUN apk add --no-cache ffmpeg
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["node", "app/server/index.js"]

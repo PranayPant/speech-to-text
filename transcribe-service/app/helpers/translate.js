@@ -1,12 +1,13 @@
 import OpenAI from "openai";
 
-import { getTranscription } from "./transcribe";
+import { getTranscription } from "./transcribe.js";
+import { generateSRT } from "./srt.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function translateSentences(params) {
+async function translateSentences(params) {
   try {
     const { transcriptId, id } = params;
     console.log("Translating sentences...", transcriptId);
@@ -38,10 +39,10 @@ export async function translateSentences(params) {
   }
 }
 
-export async function translateTranscript(params) {
+async function translateTranscript(params) {
   try {
     const { transcriptId, id } = params;
-    console.log("Translating entire transcript...", transcriptId);
+    console.log("Translating transcript...", transcriptId);
 
     const { transcript } = await getTranscription({
       transcriptId,
@@ -67,5 +68,27 @@ export async function translateTranscript(params) {
   } catch (error) {
     console.error("Error translating transcript:", error);
     throw `Error translating transcript: ${error.message}`;
+  }
+}
+
+export async function getTranslation({
+  includeSRT,
+  includeTranscript,
+  includeSentences,
+  transcriptId,
+}) {
+  try {
+    const [transcriptResult, sentencesResult] = await Promise.all([
+      includeTranscript && translateTranscript({ transcriptId }),
+      (includeSentences || includeSRT) && translateSentences({ transcriptId }),
+    ]);
+
+    const transcript = transcriptResult?.transcript;
+    const sentences = sentencesResult?.sentences;
+    const srt = sentences && generateSRT(sentences);
+    return { transcriptId, transcript, sentences, srt };
+  } catch (error) {
+    console.error("Error fetching translation:", error);
+    throw `Error fetching translation: ${error.message}`;
   }
 }

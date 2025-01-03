@@ -1,4 +1,4 @@
-import { generateSRT } from "./srt.js";
+import { generateSRT } from "../utils/srt.js";
 
 const host = window.location.host;
 const protocol = window.location.hostname === "localhost" ? "ws" : "wss";
@@ -203,27 +203,4 @@ function showSuccessBanner() {
 function removeSuccessBanner() {
   const banner = document.getElementById("success-banner");
   document.body.removeChild(banner);
-}
-
-function addDownloadButton(container, buttonText, content, filename) {
-  const button = document.createElement("button");
-  button.textContent = buttonText;
-  button.style.marginLeft = "16px";
-  button.style.padding = "10px 20px";
-  button.style.backgroundColor = "#4CAF50";
-  button.style.color = "white";
-  button.style.border = "none";
-  button.style.borderRadius = "5px";
-  button.style.cursor = "pointer";
-  button.addEventListener("click", function () {
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  });
-  container.appendChild(button);
 }
