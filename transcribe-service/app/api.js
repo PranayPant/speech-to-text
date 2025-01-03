@@ -4,7 +4,7 @@ import { MAX_PAYLOAD_SIZE } from "./constants.js";
 
 export async function fetchAssemblyAITranscript({
   transcriptId,
-  resource = "",
+  additionalResource = "",
 }) {
   try {
     const response = await axios.get(

@@ -1,4 +1,10 @@
+import OpenAI from "openai";
+
 import { getTranscription } from "./transcribe";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function translateSentences(params) {
   try {

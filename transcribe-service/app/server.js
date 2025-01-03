@@ -1,16 +1,11 @@
-import { WebSocketServer } from "ws";
-import axios from "axios";
 import http from "http";
-import OpenAI from "openai";
+import { WebSocketServer } from "ws";
 
+import { generateSRT } from "./srt.js";
 import { uploadExtractedAudio } from "./upload.js";
 import { getTranscription, transcribeAudio } from "./transcribe.js";
 import { MAX_PAYLOAD_SIZE } from "./constants.js";
 import { translateSentences } from "./translate.js";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const port = process.env.TRANSCRIBE_PORT || 8000;
 const server = http.createServer((req, res) => {
@@ -116,7 +111,7 @@ const wss = new WebSocketServer({
   maxPayload: MAX_PAYLOAD_SIZE,
 });
 
-server.listen(port, "0.0.0.0", () => {
+server.listen(port, () => {
   console.log(`WebSocket server is running on port ${port}`);
 });
 
@@ -137,7 +132,7 @@ wss.on("connection", (ws, req) => {
       }
 
       switch (event) {
-        case "upload":
+        case "upload": {
           ws.send(
             JSON.stringify({
               event: "progress",
@@ -177,14 +172,14 @@ wss.on("connection", (ws, req) => {
             })
           );
           break;
-
-        case "pollTranscription":
+        }
+        case "pollTranscription": {
           const { transcriptId: checkTranscriptId, id } = data;
           console.log("Checking transcription status...", checkTranscriptId);
           await getTranscriptionProgress(checkTranscriptId, ws, id);
           break;
-
-        case "translate":
+        }
+        case "translate": {
           const { sentences } = translateSentences(data);
           const srt = generateSRT(sentences);
           ws.send(
@@ -199,7 +194,8 @@ wss.on("connection", (ws, req) => {
             })
           );
           break;
-        default:
+        }
+        default: {
           ws.send(
             JSON.stringify({
               event: "error",
@@ -207,6 +203,7 @@ wss.on("connection", (ws, req) => {
             })
           );
           break;
+        }
       }
     } catch (error) {
       console.error("Error handling message:", error);

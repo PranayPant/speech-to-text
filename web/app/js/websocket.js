@@ -21,7 +21,7 @@ socket.onmessage = function (message) {
   const { event, data } = JSON.parse(message.data);
   let progressBar = document.getElementById("progress-bar");
   switch (event) {
-    case "progress":
+    case "progress": {
       if (!progressBar) {
         progressBar = document.createElement("div");
         progressBar.id = "progress-bar";
@@ -53,7 +53,8 @@ socket.onmessage = function (message) {
       progressBar.style.textAlign = "center";
       progressBar.style.padding = "10px";
       break;
-    case "transcriptionComplete":
+    }
+    case "transcriptionComplete": {
       if (!progressBar) {
         progressBar = document.createElement("div");
         progressBar.id = "progress-bar";
@@ -72,7 +73,8 @@ socket.onmessage = function (message) {
         "transcription.txt"
       );
       break;
-    case "transcriptionSentences":
+    }
+    case "transcriptionSentences": {
       const srtContent = generateSRT(data.sentences);
       addDownloadButton(
         progressBar,
@@ -81,7 +83,8 @@ socket.onmessage = function (message) {
         "subtitles_split.hi.srt"
       );
       break;
-    case "transcriptionSRT":
+    }
+    case "transcriptionSRT": {
       const srtFileContent = new Blob([data.srtContent], {
         type: "text/plain",
       });
@@ -92,7 +95,8 @@ socket.onmessage = function (message) {
         "subtitles.hi.srt"
       );
       break;
-    case "translationSRT":
+    }
+    case "translationSRT": {
       console.log(data);
       const srtContentEnglish = generateSRT(data.sentences);
       addDownloadButton(
@@ -102,7 +106,8 @@ socket.onmessage = function (message) {
         "subtitles.en.srt"
       );
       break;
-    case "translationSuccess":
+    }
+    case "translationSuccess": {
       console.log(data);
       const translateButton = document.getElementById(`translate-${data.id}`);
       translateButton.removeAttribute("data-loading");
@@ -116,7 +121,8 @@ socket.onmessage = function (message) {
       a.click();
       document.body.removeChild(a);
       break;
-    case "error":
+    }
+    case "error": {
       if (!progressBar) {
         progressBar = document.createElement("div");
         progressBar.id = "progress-bar";
@@ -125,8 +131,10 @@ socket.onmessage = function (message) {
       progressBar.style.backgroundColor = "#CC0000"; // Web safe color
       progressBar.textContent = data;
       break;
-    default:
+    }
+    default: {
       console.log("Unknown event:", event);
+    }
   }
 };
 
