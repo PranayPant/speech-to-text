@@ -1,9 +1,5 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
-import {
-  transcribeAudio,
-  getTranscriptionProgress,
-  getTranscription,
-} from "../helpers/transcribe.js";
+import { transcribeAudio, getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
 
 export async function wsHandler(ws, message, isBinary) {
@@ -50,7 +46,7 @@ export async function wsHandler(ws, message, isBinary) {
 
         ws.send(
           JSON.stringify({
-            event: "transcriptionQueued",
+            event: "transcriptionInProgress",
             id,
             data: {
               transcriptId,
@@ -100,7 +96,7 @@ export async function wsHandler(ws, message, isBinary) {
               id,
               data: {
                 transcriptId,
-                transcript,
+                transcript: includeTranscript ? transcript : null,
                 sentences,
                 srt,
               },

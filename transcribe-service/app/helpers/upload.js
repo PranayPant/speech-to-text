@@ -1,7 +1,7 @@
 import fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
 
-import { uploadAudioToAssemblyAI } from "./api.js";
+import { uploadAudioToAssemblyAI } from "../api.js";
 
 async function extractAudio(inputPath, outputPath) {
   return new Promise((resolve, reject) => {

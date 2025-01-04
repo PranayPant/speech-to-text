@@ -2,16 +2,16 @@ import {
   getProgressBar,
   getVideoCard,
   getDownloadButton,
-} from "../helpers/dom";
+} from "../helpers/dom.js";
 
-export async function handler(message) {
+export async function handleMessage(message) {
   const { event, data, id } = JSON.parse(message.data);
 
   const videoCard = getVideoCard(id);
   const progressBar = getProgressBar(id, event);
   const transcribeButton = videoCard.querySelector("button#transcribe");
   const translateButton = videoCard.querySelector("button#translate");
-  const videoCardButtonRow = videoCard.querySelector("div.button-row");
+  const videoCardButtonGroup = videoCard.querySelector("div.button-group");
 
   switch (event) {
     case "transcriptionInProgress": {
@@ -31,7 +31,7 @@ export async function handler(message) {
         downloadLinkContent,
         "transcript.hi.txt"
       );
-      videoCardButtonRow.appendChild(downloadTranscriptButton);
+      videoCardButtonGroup.appendChild(downloadTranscriptButton);
       break;
     }
     case "translationInProgress": {
@@ -50,7 +50,7 @@ export async function handler(message) {
         downloadLinkContent,
         "transcript.en.txt"
       );
-      videoCardButtonRow.appendChild(downloadTranscriptButton);
+      videoCardButtonGroup.appendChild(downloadTranscriptButton);
       break;
     }
     case "error": {

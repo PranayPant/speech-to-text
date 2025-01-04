@@ -31,7 +31,7 @@ export async function uploadAudioToAssemblyAI(binaryData) {
       binaryData,
       {
         headers: {
-          authorization: apiKey,
+          authorization: process.env.ASSEMBLYAI_API_KEY,
           "content-type": "application/octet-stream",
         },
         maxBodyLength: MAX_PAYLOAD_SIZE,

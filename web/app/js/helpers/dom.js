@@ -1,6 +1,11 @@
 export function getVideoCard(id) {
-  return document.querySelector(`div#video-card[data-card-id="${id}"]`);
+  return document.querySelector(`div.video-card[data-card-id="${id}"]`);
 }
+
+export function getAppBanner() {
+  return document.querySelector("div#app-banner");
+}
+
 export function getProgressBar(id, event) {
   const videoCard = getVideoCard(id);
   let progressBar = videoCard.querySelector("div#progress-bar");
