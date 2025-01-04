@@ -38,7 +38,7 @@ export async function getTranscription({
       ]);
     return {
       status: transcriptResponse?.data?.status,
-      text: transcriptResponse?.data?.text,
+      transcript: transcriptResponse?.data?.text,
       sentences: sentencesResponse?.data?.sentences?.map(
         ({ text, start, end }) => ({
           text,
