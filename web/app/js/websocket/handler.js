@@ -8,14 +8,22 @@ export async function handleMessage(message) {
   const { event, data, id } = JSON.parse(message.data);
 
   const videoCard = getVideoCard(id);
-  const progressBar = getProgressBar(id, event);
+
+  const bannerContainer = videoCard.querySelector("div#banner-container");
+  const banner = document.createElement("div");
+  if (data.message) {
+    banner.className = "banner";
+    banner.setAttribute("data-event", event);
+    bannerContainer.appendChild(banner);
+    banner.textContent = data.message;
+  }
+
   const transcribeButton = videoCard.querySelector("button#transcribe");
   const translateButton = videoCard.querySelector("button#translate");
   const videoCardButtonGroup = videoCard.querySelector("div.button-group");
 
   switch (event) {
     case "transcriptionInProgress": {
-      progressBar.textContent = data.message;
       transcribeButton.setAttribute("data-loading", "");
       translateButton.disabled = true;
       break;
@@ -35,7 +43,6 @@ export async function handleMessage(message) {
       break;
     }
     case "translationInProgress": {
-      progressBar.textContent = data.message;
       translateButton.setAttribute("data-loading", "");
       translateButton.disabled = true;
       break;
@@ -54,8 +61,7 @@ export async function handleMessage(message) {
       break;
     }
     case "error": {
-      progressBar.textContent = data.message;
-      progressBar.classList.add("error");
+      banner.classList.add("error");
       break;
     }
     default: {

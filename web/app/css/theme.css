@@ -1,0 +1,36 @@
+:root {
+  --primary-color: #6200ea;
+  --primary-light-color: #9d46ff;
+  --primary-dark-color: #0a00b6;
+  --secondary-color: #03dac6;
+  --secondary-light-color: #66fff9;
+  --secondary-dark-color: #00a896;
+  --background-color: #ffffff;
+  --surface-color: #ffffff;
+  --error-color: #b00020;
+  --on-primary-color: #ffffff;
+  --on-secondary-color: #000000;
+  --on-background-color: #000000;
+  --on-surface-color: #000000;
+  --on-error-color: #ffffff;
+  --success-color: #4caf50;
+  --on-success-color: #ffffff;
+  --warning-color: #ff9800;
+  --on-warning-color: #ffffff;
+}
+
+.button {
+  background-color: var(--secondary-color);
+  color: var(--on-secondary-color);
+}
+
+.card {
+  background-color: var(--surface-color);
+  color: var(--on-surface-color);
+  border: 1px solid var(--primary-light-color);
+}
+
+.primary-dark {
+  background-color: var(--primary-dark-color);
+  color: var(--on-primary-color);
+}

@@ -8,7 +8,7 @@ export function getAppBanner() {
 
 export function getProgressBar(id, event) {
   const videoCard = getVideoCard(id);
-  let progressBar = videoCard.querySelector("div#progress-bar");
+  let progressBar = videoCard.querySelector("div.banner");
 
   if (!progressBar) {
     progressBar = document.createElement("div");

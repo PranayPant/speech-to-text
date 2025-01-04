@@ -21,8 +21,7 @@ server.listen(port, () => {
 });
 
 wss.on("connection", (ws, req) => {
-  console.log("Client connected");
-  console.log("Headers", req.headers);
+  console.log("Client connected", req.headers.origin, req.headers["user-agent"]);
 
   ws.on("message", async (message, isBinary) => {
     wsHandler(ws, message, isBinary);

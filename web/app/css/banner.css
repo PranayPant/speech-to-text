@@ -1,0 +1,18 @@
+.banner {
+  display: block;
+  background-color: var(--surface-color);
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.banner.success {
+  color: var(--on-success-color);
+  background-color: var(--success-color);
+}
+
+.banner.warning {
+  color: var(--on-warning-color);
+  background-color: var(--warning-color);
+}

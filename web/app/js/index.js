@@ -24,9 +24,14 @@ function handleVideoUpload(event) {
     videoElement.controls = true;
     videoElement.src = URL.createObjectURL(file);
 
+    const videoCardBannerContainer = document.createElement("div");
+    videoCardBannerContainer.id = "banner-container";
+
     const videoCard = document.createElement("div");
     videoCard.className = "video-card";
     videoCard.setAttribute("data-card-id", id);
+
+    videoCard.appendChild(videoCardBannerContainer);
     videoCard.appendChild(videoElement);
 
     const deleteIcon = document.createElement("img");
@@ -36,7 +41,7 @@ function handleVideoUpload(event) {
 
     const transcribeButton = document.createElement("button");
     transcribeButton.id = "transcribe";
-    transcribeButton.className = "primary-action";
+    transcribeButton.className = "primary";
     transcribeButton.textContent = "Transcribe";
     transcribeButton.addEventListener("click", function () {
       sendTranscribeRequest(file, id);
@@ -45,7 +50,7 @@ function handleVideoUpload(event) {
     const translateButton = document.createElement("button");
     translateButton.id = "translate";
     translateButton.disabled = true;
-    translateButton.className = "primary-action";
+    translateButton.className = "primary";
     translateButton.textContent = "Translate";
     translateButton.addEventListener("click", function () {
       sendTranslateRequest(
