@@ -1,4 +1,17 @@
 services:
+  traefik:
+    image: traefik:v2.9
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   transcribe:
     build: ./transcribe-service
     environment:
@@ -7,9 +20,19 @@ services:
       - TRANSCRIBE_PORT=8000
     ports:
       - 8000:8000
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transcribe.rule=Host(`localhost`) && PathPrefix(`/ws`)"
+
   web:
     build: ./web
     ports:
       - 8002:80
     depends_on:
       - transcribe
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`localhost`)"

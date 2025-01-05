@@ -2,7 +2,7 @@
 FROM nginx:alpine
 
 COPY ./app /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/nginx.conf
+# COPY ./nginx.conf /etc/nginx/nginx.conf
 
 # Expose port 80
 EXPOSE 80
