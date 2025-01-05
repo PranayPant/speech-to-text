@@ -5,7 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy the rest of the application code
-COPY ./app/server.js ./app/package*.json .
+COPY ./app/ ./
 
 # Install dependencies
 RUN npm install
@@ -21,4 +21,4 @@ RUN apk add --no-cache openssl && \
 RUN apk add --no-cache ffmpeg
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["node", "./server/index.js"]

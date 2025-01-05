@@ -13,18 +13,6 @@ function formatTimestamp(ms) {
   return `${hours}:${minutes}:${seconds},${milliseconds}`;
 }
 
-// Function to generate SRT content from an array of subtitle objects
-export function generateSRT(data, split = true) {
-  const subtitles = split ? splitSentences(data) : data;
-  return subtitles
-    .map(({ start, end, text }, index) => {
-      const startTime = formatTimestamp(start);
-      const endTime = formatTimestamp(end);
-      return `${index + 1}\n${startTime} --> ${endTime}\n${text}\n`;
-    })
-    .join("\n");
-}
-
 function splitSentences(sentences, maxLength = 80) {
   const newSentences = [];
 
@@ -69,4 +57,16 @@ function splitSentences(sentences, maxLength = 80) {
   });
 
   return newSentences;
+}
+
+// Function to generate SRT content from an array of subtitle objects
+export function generateSRT(data, split = true) {
+  const subtitles = split ? splitSentences(data) : data;
+  return subtitles
+    .map(({ start, end, text }, index) => {
+      const startTime = formatTimestamp(start);
+      const endTime = formatTimestamp(end);
+      return `${index + 1}\n${startTime} --> ${endTime}\n${text}\n`;
+    })
+    .join("\n");
 }

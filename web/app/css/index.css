@@ -1,3 +1,7 @@
+@import url('./banner.css');
+@import url('./theme.css');
+@import url('./button.css');
+
 body {
   padding: 16px;
   display: flex;
@@ -20,11 +24,13 @@ body main {
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+  margin: 8px;
+  padding: 8px;
 }
 
 .video-container video {
-  width: 300px;
-  height: 200px;
+  width: 500px;
+  height: 300px;
   object-fit: cover;
 }
 
@@ -61,72 +67,3 @@ body main {
   }
 }
 
-.video-card .primary-action {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin: 8px;
-  text-align: center;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  @media (min-width: 768px) {
-    max-width: 100px;
-  }
-}
-
-.video-card button:not(:disabled):hover {
-  background-color: #0056b3;
-}
-
-.flex-item {
-  flex: 1;
-  padding: 10px;
-}
-
-.button-group {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 4px;
-}
-
-.video-card button.primary-action:disabled {
-  background-color: #cccccc;
-  color: #666666;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.video-card button[data-loading="true"] {
-  background-color: #cccccc;
-  color: #666666;
-  cursor: not-allowed;
-  position: relative;
-  padding-left: 32px;
-}
-
-.video-card button[data-loading="true"]::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  margin-top: -8px;
-  border: 2px solid #666666;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
