@@ -45,7 +45,7 @@ export async function uploadAudioToAssemblyAI(binaryData) {
     );
     return response;
   } catch (error) {
-    console.error("Error uploading audio to AssemblyAI:", error);
+    console.error("Error uploading audio to AssemblyAI:", process.env.ASSEMBLYAI_API_KEY, error.message);
     throw `Error uploading audio to AssemblyAI: ${error.message}`;
   }
 }
