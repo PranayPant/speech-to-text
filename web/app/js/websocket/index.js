@@ -18,8 +18,8 @@ socket.onerror = function (error) {
 socket.onclose = function (event) {
   console.log("WebSocket connection closed:", event);
   const banner = getAppBanner();
-  banner.textContent = "WebSocket connection established closed.";
-  banner.classList.add("warning");
+  banner.textContent = "WebSocket connection closed, please refresh the page.";
+  banner.classList.add("error");
 };
 
 socket.onmessage = function (message) {
