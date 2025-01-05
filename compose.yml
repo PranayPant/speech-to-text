@@ -12,7 +12,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  transcribe:
+  backend:
     build: ./transcribe-service
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
@@ -24,15 +24,15 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transcribe.rule=Host(`${APP_HOST}`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.backend.rule=Host(`${APP_HOST}`) && PathPrefix(`/ws`)"
 
-  web:
+  frontend:
     build: ./web
     ports:
       - 8002:80
     depends_on:
-      - transcribe
+      - backend
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.rule=Host(`${APP_HOST}`)"
