@@ -24,7 +24,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transcribe.rule=Host(`localhost`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.transcribe.rule=Host(`${APP_HOST}`) && PathPrefix(`/ws`)"
 
   web:
     build: ./web

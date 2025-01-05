@@ -22,8 +22,6 @@ server.listen(port, () => {
 
 wss.on("connection", (ws, req) => {
   console.log("Client connected");
-  console.log("Client headers:", req.headers);
-  console.log("Allowed protocols:", ws.protocols)
 
   ws.on("message", async (message, isBinary) => {
     wsHandler(ws, message, isBinary);
