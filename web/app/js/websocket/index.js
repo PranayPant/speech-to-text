@@ -6,14 +6,14 @@ const protocol = window.location.hostname === "localhost" ? "ws" : "wss";
 const socket = new WebSocket(`${protocol}://${host}/ws/`);
 
 socket.onopen = function (event) {
-  console.log("WebSocket connection established:", event);
+  console.log("WebSocket connection established with protocol", socket.protocol,"and extensions", socket.extensions);
   const banner = getAppBanner();
   banner.textContent = "WebSocket connection established successfully!";
   banner.classList.add("success");
 };
 
 socket.onerror = function (error) {
-  console.error("WebSocket error:", error);
+  console.log("WebSocket error:", error);
 };
 socket.onclose = function (event) {
   console.log("WebSocket connection closed:", event);
