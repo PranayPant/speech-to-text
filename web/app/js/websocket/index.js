@@ -3,7 +3,7 @@ import { handleMessage } from "./handler.js";
 
 const host = window.location.host;
 const protocol = window.location.hostname === "localhost" ? "ws" : "wss";
-const socket = new WebSocket(`${protocol}://${host}/ws/`);
+const socket = new WebSocket(`${protocol}://${host}/ws/`, ['json']);
 
 socket.onopen = function (event) {
   console.log("WebSocket connection established with protocol", socket.protocol,"and extensions", socket.extensions);

@@ -32,4 +32,8 @@ wss.on("connection", (ws, req) => {
   ws.on("close", () => {
     console.log("Client disconnected");
   });
+
+    ws.on("error", (error) => {
+      console.log("Error in WebSocket connection:", error);
+    });
 });
