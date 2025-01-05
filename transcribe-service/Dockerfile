@@ -13,10 +13,6 @@ RUN npm install
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Generate self-signed SSL certificate
-RUN apk add --no-cache openssl && \
-    openssl req -x509 -newkey rsa:4096 -keyout /app/key.pem -out /app/cert.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
-
 # Install ffmpeg
 RUN apk add --no-cache ffmpeg
 

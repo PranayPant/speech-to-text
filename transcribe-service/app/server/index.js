@@ -21,7 +21,9 @@ server.listen(port, () => {
 });
 
 wss.on("connection", (ws, req) => {
-  console.log("Client connected", req.headers.origin, req.headers["user-agent"]);
+  console.log("Client connected");
+  console.log("Client headers:", req.headers);
+  console.log("Allowed protocols:", ws.protocols)
 
   ws.on("message", async (message, isBinary) => {
     wsHandler(ws, message, isBinary);
@@ -30,4 +32,8 @@ wss.on("connection", (ws, req) => {
   ws.on("close", () => {
     console.log("Client disconnected");
   });
+
+    ws.on("error", (error) => {
+      console.log("Error in WebSocket connection:", error);
+    });
 });
