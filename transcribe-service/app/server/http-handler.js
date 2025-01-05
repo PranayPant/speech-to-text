@@ -1,6 +1,6 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
-import { transcribeAudio } from "../helpers/transcribe.js";
 import { getTranscription } from "../helpers/transcribe.js";
+import { postTranscription } from "../api.js";
 
 export function httpHandler(req, res) {
   if (req.method !== "POST") {
@@ -38,7 +38,7 @@ export function httpHandler(req, res) {
         const parsedData = JSON.parse(data);
         const { uploadUrl } = parsedData;
         try {
-          const transcriptId = await transcribeAudio({
+          const transcriptId = await postTranscription({
             audio_url: uploadUrl,
           });
           res.writeHead(200, { "Content-Type": "application/json" });

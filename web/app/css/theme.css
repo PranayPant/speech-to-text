@@ -34,3 +34,8 @@
   background-color: var(--primary-dark-color);
   color: var(--on-primary-color);
 }
+
+.secondary-dark {
+  background-color: var(--secondary-dark-color);
+  color: var(--on-secondary-color);
+}

@@ -1,6 +1,7 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
-import { transcribeAudio, getTranscription } from "../helpers/transcribe.js";
+import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
+import { postTranscription } from "../api.js";
 
 export async function wsHandler(ws, message, isBinary) {
   let event, data, id;
@@ -11,7 +12,7 @@ export async function wsHandler(ws, message, isBinary) {
       id = message.slice(0, 21).toString();
       data = message.slice(21);
     } else {
-      ({ event, data } = JSON.parse(message));
+      ({ event, data, id } = JSON.parse(message));
     }
 
     switch (event) {
@@ -19,6 +20,7 @@ export async function wsHandler(ws, message, isBinary) {
         ws.send(
           JSON.stringify({
             event: "transcriptionInProgress",
+            status: "pending",
             id,
             data: {
               message:
@@ -32,6 +34,7 @@ export async function wsHandler(ws, message, isBinary) {
         ws.send(
           JSON.stringify({
             event: "transcriptionInProgress",
+            status: "pending",
             id,
             data: {
               message: "Audio uploaded, starting transcription process...",
@@ -40,13 +43,14 @@ export async function wsHandler(ws, message, isBinary) {
         );
 
         // Request transcription from AssemblyAI
-        const transcriptId = await transcribeAudio({
+        const transcriptId = await postTranscription({
           audio_url: uploadUrl,
         });
 
         ws.send(
           JSON.stringify({
-            event: "transcriptionInProgress",
+            event: "transcriptionQueued",
+            status: "pending",
             id,
             data: {
               transcriptId,
@@ -63,7 +67,7 @@ export async function wsHandler(ws, message, isBinary) {
           includeSentences,
           includeTranscript,
         } = data;
-        console.log("Checking transcription status...");
+        console.log("Checking transcription status...", transcriptId);
         const { status, transcript } = await getTranscription({
           transcriptId,
           includeTranscript: true,
@@ -72,9 +76,11 @@ export async function wsHandler(ws, message, isBinary) {
         });
 
         if (status === "error") {
+          console.log("Transcription failed:", transcriptId);
           ws.send(
             JSON.stringify({
-              event: "transcriptionFailed",
+              event: "error",
+              status: "error",
               id,
               data: {
                 transcriptId,
@@ -83,6 +89,7 @@ export async function wsHandler(ws, message, isBinary) {
             })
           );
         } else if (status === "completed") {
+          console.log("Transcription complete:", transcriptId);
           const { sentences, srt } = await getTranscription({
             transcriptId,
             includeTranscript: false,
@@ -92,20 +99,28 @@ export async function wsHandler(ws, message, isBinary) {
 
           ws.send(
             JSON.stringify({
-              event: "transcriptionComplete",
+              event: "transcriptionSuccess",
+              status: "success",
               id,
               data: {
                 transcriptId,
                 transcript: includeTranscript ? transcript : null,
                 sentences,
                 srt,
+                message: "Transcription complete.",
               },
             })
           );
         } else {
+          console.log(
+            "Transcription in progress with status",
+            status,
+            transcriptId
+          );
           ws.send(
             JSON.stringify({
-              event: "progress",
+              event: "transcriptionQueued",
+              status: "pending",
               id,
               data: {
                 transcriptId,
@@ -117,17 +132,29 @@ export async function wsHandler(ws, message, isBinary) {
         break;
       }
       case "translate": {
+        ws.send(
+          JSON.stringify({
+            event: "translationInProgress",
+            status: "pending",
+            id,
+            data: {
+              message: "Translating transcript...",
+            },
+          })
+        );
         const { sentences, srt, transcript, transcriptId } =
           await getTranslation(data);
         ws.send(
           JSON.stringify({
             event: "translationSuccess",
+            status: "success",
             id,
             data: {
               transcriptId,
-              sentences,
-              srt,
-              transcript,
+              sentences: data.includeSentences ? sentences : null,
+              srt: data.includeSRT ? srt : null,
+              transcript: data.includeTranscript ? transcript : null,
+              message: "Translation complete.",
             },
           })
         );
@@ -137,6 +164,7 @@ export async function wsHandler(ws, message, isBinary) {
         ws.send(
           JSON.stringify({
             event: "error",
+            status: "error",
             data: { message: `Unknown event: ${event}` },
             id,
           })
@@ -147,7 +175,12 @@ export async function wsHandler(ws, message, isBinary) {
   } catch (error) {
     console.error("Error handling message:", error);
     ws.send(
-      JSON.stringify({ id, event: "error", data: { message: error.message } })
+      JSON.stringify({
+        id,
+        event: "error",
+        status: "error",
+        data: { message: error.message },
+      })
     );
   }
 }

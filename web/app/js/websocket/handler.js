@@ -1,19 +1,20 @@
-import {
-  getProgressBar,
-  getVideoCard,
-  getDownloadButton,
-} from "../helpers/dom.js";
+import { getVideoCard, getDownloadButton } from "../helpers/dom.js";
+import { sendTrancriptProgressRequest } from "./index.js";
 
 export async function handleMessage(message) {
-  const { event, data, id } = JSON.parse(message.data);
+  const { status, event, data, id } = JSON.parse(message.data);
+
+  console.log("Received message:", event, data, id);
 
   const videoCard = getVideoCard(id);
 
   const bannerContainer = videoCard.querySelector("div#banner-container");
-  const banner = document.createElement("div");
+  let banner = bannerContainer.querySelector("div.banner");
+  banner = banner ?? document.createElement("div");
+
   if (data.message) {
-    banner.className = "banner";
-    banner.setAttribute("data-event", event);
+    banner.classList.add("banner", "flex-container");
+    banner.setAttribute("data-status", status);
     bannerContainer.appendChild(banner);
     banner.textContent = data.message;
   }
@@ -28,17 +29,23 @@ export async function handleMessage(message) {
       translateButton.disabled = true;
       break;
     }
-    case "transcriptionSuccess": {
+    case "transcriptionQueued": {
       videoCard.setAttribute("data-transcript-id", data.transcriptId);
+      setTimeout(() => {
+        sendTrancriptProgressRequest(data.transcriptId, id);
+      }, 5000);
+      break;
+    }
+    case "transcriptionSuccess": {
       transcribeButton.removeAttribute("data-loading");
+      transcribeButton.disabled = true;
       translateButton.disabled = false;
-      const downloadLinkContent = new Blob([data.text], { type: "text/plain" });
-      const downloadTranscriptButton = getDownloadButton(
-        id,
-        "Download original transcript (Hindi)",
-        downloadLinkContent,
-        "transcript.hi.txt"
-      );
+      const downloadLinkContent = new Blob([data.srt], { type: "text/plain" });
+      const downloadTranscriptButton = getDownloadButton({
+        buttonText: "Download subtitles (Hindi)",
+        content: downloadLinkContent,
+        filename: "subtitles.hi.srt",
+      });
       videoCardButtonGroup.appendChild(downloadTranscriptButton);
       break;
     }
@@ -49,23 +56,29 @@ export async function handleMessage(message) {
     }
     case "translationSuccess": {
       translateButton.removeAttribute("data-loading");
-      translateButton.disabled = false;
-      const downloadLinkContent = new Blob([data.text], { type: "text/plain" });
-      const downloadTranscriptButton = getDownloadButton(
-        id,
-        "Download translated transcript (English)",
-        downloadLinkContent,
-        "transcript.en.txt"
-      );
+      const downloadLinkContent = new Blob([data.srt], { type: "text/plain" });
+      const downloadTranscriptButton = getDownloadButton({
+        buttonText: "Download subtitles (English)",
+        content: downloadLinkContent,
+        filename: "subtitles.en.srt",
+      });
       videoCardButtonGroup.appendChild(downloadTranscriptButton);
       break;
     }
     case "error": {
       banner.classList.add("error");
+      translateButton.removeAttribute("data-loading");
+      translateButton.disabled = false;
+      transcribeButton.removeAttribute("data-loading");
+      transcribeButton.disabled = false;
       break;
     }
     default: {
       console.log("Unknown event:", event);
+      translateButton.removeAttribute("data-loading");
+      translateButton.disabled = false;
+      transcribeButton.removeAttribute("data-loading");
+      transcribeButton.disabled = false;
       throw new Error(`Unknown event: ${event}`);
     }
   }

@@ -4,11 +4,11 @@ import { MAX_PAYLOAD_SIZE } from "./constants.js";
 
 export async function fetchAssemblyAITranscript({
   transcriptId,
-  additionalResource = "",
+  resource = "",
 }) {
   try {
     const response = await axios.get(
-      `https://api.assemblyai.com/v2/transcript/${transcriptId}/${additionalResource}`,
+      `https://api.assemblyai.com/v2/transcript/${transcriptId}${resource}`,
       {
         headers: {
           authorization: process.env.ASSEMBLYAI_API_KEY,
@@ -17,8 +17,9 @@ export async function fetchAssemblyAITranscript({
     );
     return response;
   } catch (error) {
-    console.error("Error fetching AssemblyAI transcript:", error);
-    throw `Error fetching AssemblyAI transcript: ${error.message}`;
+    const errorMessage = `Error fetching AssemblyAI transcript for ${transcriptId}${resource}: ${error.message}`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 }
 
@@ -46,5 +47,24 @@ export async function uploadAudioToAssemblyAI(binaryData) {
   } catch (error) {
     console.error("Error uploading audio to AssemblyAI:", error);
     throw `Error uploading audio to AssemblyAI: ${error.message}`;
+  }
+}
+
+export async function postTranscription(params) {
+  try {
+    const transcriptResponse = await axios.post(
+      "https://api.assemblyai.com/v2/transcript",
+      { ...params, language_code: "hi" },
+      {
+        headers: {
+          authorization: process.env.ASSEMBLYAI_API_KEY,
+          "content-type": "application/json",
+        },
+      }
+    );
+    return transcriptResponse.data.id;
+  } catch (error) {
+    console.error("Error transcribing audio:", error);
+    throw `Error transcribing audio: ${error.message}`;
   }
 }

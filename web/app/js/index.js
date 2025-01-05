@@ -34,11 +34,6 @@ function handleVideoUpload(event) {
     videoCard.appendChild(videoCardBannerContainer);
     videoCard.appendChild(videoElement);
 
-    const deleteIcon = document.createElement("img");
-    deleteIcon.className = "delete-icon";
-    deleteIcon.src = "./icons/delete.png";
-    deleteIcon.alt = "Delete";
-
     const transcribeButton = document.createElement("button");
     transcribeButton.id = "transcribe";
     transcribeButton.className = "primary";
@@ -66,7 +61,6 @@ function handleVideoUpload(event) {
     buttonGroup.appendChild(translateButton);
 
     videoCard.appendChild(buttonGroup);
-    videoCard.appendChild(deleteIcon);
 
     videoContainer.appendChild(videoCard);
   }

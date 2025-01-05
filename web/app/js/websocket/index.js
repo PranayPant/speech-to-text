@@ -58,6 +58,23 @@ export function sendTranslateRequest(transcriptId, id) {
       id,
       data: {
         transcriptId,
+        includeTranscript: false,
+        includeSentences: false,
+        includeSRT: true,
+      },
+    })
+  );
+}
+export function sendTrancriptProgressRequest(transcriptId, id) {
+  socket.send(
+    JSON.stringify({
+      event: "pollTranscription",
+      id,
+      data: {
+        transcriptId,
+        includeTranscript: false,
+        includeSentences: false,
+        includeSRT: true,
       },
     })
   );

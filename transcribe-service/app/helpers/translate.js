@@ -89,6 +89,6 @@ export async function getTranslation({
     return { transcriptId, transcript, sentences, srt };
   } catch (error) {
     console.error("Error fetching translation:", error);
-    throw `Error fetching translation: ${error.message}`;
+    throw new Error(`Error fetching translation: ${error.message}`);
   }
 }
