@@ -6,7 +6,7 @@ export function getAppBanner() {
   return document.querySelector("div#app-banner");
 }
 
-export function getProgressBar(id, event) {
+export function getProgressBar(id) {
   const videoCard = getVideoCard(id);
   let progressBar = videoCard.querySelector("div.banner");
 
@@ -21,7 +21,6 @@ export function getProgressBar(id, event) {
     });
     progressBar.appendChild(closeButton);
   }
-  progressBar.setAttribute("data-event", event);
 
   return progressBar;
 }

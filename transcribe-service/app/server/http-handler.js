@@ -1,5 +1,6 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
+import { getTranslation } from "../helpers/translate.js";
 import { postTranscription } from "../api.js";
 
 export function httpHandler(req, res) {
@@ -71,10 +72,30 @@ export function httpHandler(req, res) {
             includeSentences,
             includeSRT,
           });
+          console.log("Transcript details:", transcript);
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(transcript));
         } catch (error) {
           console.error("Error fetching transcript:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      break;
+    }
+    case "/translate": {
+      let data = "";
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+      req.on("end", async () => {
+        const parsedData = JSON.parse(data);
+        try {
+          const translationDetails = await getTranslation(parsedData);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(translationDetails));
+        } catch (error) {
+          console.error("Error during translation:", error);
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: error.message }));
         }
@@ -93,6 +114,7 @@ export function httpHandler(req, res) {
       break;
     }
     default: {
+      console.log("Not Found url", req.url);
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not Found");
       break;
