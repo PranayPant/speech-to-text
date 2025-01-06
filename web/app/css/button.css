@@ -11,6 +11,8 @@ button {
   cursor: pointer;
   transition: background-color 0.3s;
   max-width: fit-content;
+  transition: width 0.3s;
+  transition-timing-function: ease-in;
 }
 
 button:hover {
@@ -77,12 +79,13 @@ button[data-type]::before {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
 }
 
 button[data-type="download"]::before {
-  content: "\u2B73";
+  content: "\2B73";
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
 }
 
 button[data-type="delete"]::before {

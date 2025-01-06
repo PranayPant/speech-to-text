@@ -39,18 +39,6 @@ export async function handleTranscription(mediaFile, cardId) {
   const transcribeButton = videoCard.querySelector("button#transcribe");
   const translateButton = videoCard.querySelector("button#translate");
   const buttonGroup = videoCard.querySelector("div.button-group");
-
-  // const bannerContainer = videoCard.querySelector("div#banner-container");
-  // let banner = bannerContainer.querySelector("div.banner");
-
-  // if (!banner) {
-  //   banner = document.createElement("div");
-  //   banner.classList.add("banner", "flex-container");
-  //   bannerContainer.appendChild(banner);
-  // }
-
-  // banner.setAttribute("data-status", "pending");
-  // banner.textContent = "Uploading media file...";
   transcribeButton.setAttribute("data-loading", "");
   transcribeButton.disabled = true;
 
@@ -70,8 +58,7 @@ export async function handleTranscription(mediaFile, cardId) {
       makeToastForVideoCard({
         id: cardId,
         message: "Transcript generated!",
-        type: "success",
-        duration: 120000,
+        status: "success",
       });
       transcribeButton.removeAttribute("data-loading");
       translateButton.disabled = false;
@@ -89,9 +76,8 @@ export async function handleTranscription(mediaFile, cardId) {
       transcribeButton.disabled = false;
       makeToastForVideoCard({
         id: cardId,
-        message: "An ewrror occurred during transcription.",
-        type: "error",
-        duration: 10000,
+        message: "An error occurred during transcription.",
+        status: "error",
       });
     }
   };
@@ -108,32 +94,28 @@ export async function handleTranslation(cardId) {
   const transcriptId = videoCard.getAttribute("data-transcript-id");
 
   if (!transcriptId) {
-    throw new Error("Transcript ID not found for media card");
+    makeToastForVideoCard({
+      id: cardId,
+      message: "No transcript found.",
+      status: "error",
+    });
+    return;
   }
 
   const translateButton = videoCard.querySelector("button#translate");
   const buttonGroup = videoCard.querySelector("div.button-group");
-
-  const bannerContainer = videoCard.querySelector("div#banner-container");
-  let banner = bannerContainer.querySelector("div.banner");
-
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.classList.add("banner", "flex-container");
-    bannerContainer.appendChild(banner);
-  }
-
-  banner.setAttribute("data-status", "pending");
-  banner.textContent = "Translating transcript...";
   translateButton.setAttribute("data-loading", "");
   translateButton.disabled = true;
 
   try {
     console.log("Translate request sent for media card", cardId);
+    translateButton.textContent = "Translating...";
     const { srt } = await postTranslation({ transcriptId, includeSRT: true });
-    banner.textContent = "Translation complete!";
-    banner.setAttribute("data-status", "success");
-    translateButton.removeAttribute("data-loading");
+    makeToastForVideoCard({
+      id: cardId,
+      message: "Translation complete!",
+      status: "success",
+    });
     const downloadHindiSubtitlesBtn = getDownloadButton({
       buttonText: "English Subtitles",
       content: srt,
@@ -143,8 +125,11 @@ export async function handleTranslation(cardId) {
     buttonGroup.appendChild(downloadHindiSubtitlesBtn);
   } catch (error) {
     console.error("Error translating transcript:", error.message);
-    banner.textContent = "Error translating transcript.";
-    banner.setAttribute("data-status", "error");
+    makeToastForVideoCard({
+      id: cardId,
+      message: "An error occurred during translation.",
+      status: "error",
+    });
     translateButton.removeAttribute("data-loading");
     translateButton.disabled = false;
   }
