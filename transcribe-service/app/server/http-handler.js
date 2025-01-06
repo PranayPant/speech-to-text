@@ -59,17 +59,19 @@ export function httpHandler(req, res) {
       });
       req.on("end", async () => {
         const parsedData = JSON.parse(data);
-        const { includeSentences, includeSRT, includeTranscript } = parsedData;
+        const { includeSentences, includeSRT, includeTranscript, transcriptId } = parsedData;
         let srt, sentences;
         console.log("Transcript request received for:", parsedData);
         try {
           const { status, transcript } = await getTranscription({
+            transcriptId,
             includeTranscript: true,
             includeSentences: false,
             includeSRT: false,
           });
           if (status === "completed") {
             ({ sentences, srt } = await getTranscription({
+              transcriptId,
               includeSentences,
               includeSRT,
               includeTranscript: false,
