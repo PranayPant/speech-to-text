@@ -1,10 +1,9 @@
 export async function uploadBinaryData(binaryData, mimeType) {
-  const formData = new FormData();
   console.log("Uploading media file...", mimeType);
-  formData.append("blob", new Blob([binaryData], { type: mimeType }));
+  const blob = new Blob([binaryData], { type: mimeType });
   const response = await fetch("/api/upload", {
     method: "POST",
-    body: formData,
+    body: blob,
     headers: {
       "Content-Type": "application/octet-stream",
     },

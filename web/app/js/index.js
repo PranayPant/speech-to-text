@@ -1,18 +1,14 @@
-// import {
-//   sendTranscribeRequest,
-//   sendTranslateRequest,
-// } from "./websocket/index.js";
 import { nanoid } from "./utils/nanoid.js";
 import { handleTranscription, handleTranslation } from "./http/helpers.js";
 
 document
   .getElementById("mediaInput")
-  .addEventListener("change", handleVideoUpload);
+  .addEventListener("change", handleVideoSelection);
 document
   .getElementById("clearButton")
-  .addEventListener("click", clearVideoUploads);
+  .addEventListener("click", clearVideoSelections);
 
-function handleVideoUpload(event) {
+function handleVideoSelection(event) {
   const files = event.target.files;
   const videoContainer = document.getElementById("videoContainer");
 
@@ -63,7 +59,7 @@ function handleVideoUpload(event) {
   }
 }
 
-function clearVideoUploads() {
+function clearVideoSelections() {
   const mediaInput = document.getElementById("mediaInput");
   const videoContainer = document.getElementById("videoContainer");
 

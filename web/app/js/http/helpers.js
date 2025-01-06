@@ -1,4 +1,8 @@
-import { getDownloadButton, getVideoCard } from "../helpers/dom.js";
+import {
+  getDownloadButton,
+  getVideoCard,
+  makeToastForVideoCard,
+} from "../helpers/dom.js";
 import {
   uploadBinaryData,
   initiateTranscription,
@@ -36,17 +40,17 @@ export async function handleTranscription(mediaFile, cardId) {
   const translateButton = videoCard.querySelector("button#translate");
   const buttonGroup = videoCard.querySelector("div.button-group");
 
-  const bannerContainer = videoCard.querySelector("div#banner-container");
-  let banner = bannerContainer.querySelector("div.banner");
+  // const bannerContainer = videoCard.querySelector("div#banner-container");
+  // let banner = bannerContainer.querySelector("div.banner");
 
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.classList.add("banner", "flex-container");
-    bannerContainer.appendChild(banner);
-  }
+  // if (!banner) {
+  //   banner = document.createElement("div");
+  //   banner.classList.add("banner", "flex-container");
+  //   bannerContainer.appendChild(banner);
+  // }
 
-  banner.setAttribute("data-status", "pending");
-  banner.textContent = "Uploading media file...";
+  // banner.setAttribute("data-status", "pending");
+  // banner.textContent = "Uploading media file...";
   transcribeButton.setAttribute("data-loading", "");
   transcribeButton.disabled = true;
 
@@ -56,14 +60,19 @@ export async function handleTranscription(mediaFile, cardId) {
       const dataBuffer = event.target.result;
       const mimeType = mediaFile.type;
       console.log("Transcribe request sent for media card", cardId);
+      transcribeButton.textContent = "Uploading media...";
       const uploadUrl = await uploadBinaryData(dataBuffer, mimeType);
-      banner.textContent = "Processing media file...";
+      transcribeButton.textContent = "Processing...";
       const transcriptId = await initiateTranscription(uploadUrl);
+      transcribeButton.textContent = "Generating transcript...";
       videoCard.setAttribute("data-transcript-id", transcriptId);
-      banner.textContent = "Generating transcript...";
       const { srt } = await pollTranscript(transcriptId);
-      banner.textContent = "Transcript generated!";
-      banner.setAttribute("data-status", "success");
+      makeToastForVideoCard({
+        id: cardId,
+        message: "Transcript generated!",
+        type: "success",
+        duration: 120000,
+      });
       transcribeButton.removeAttribute("data-loading");
       translateButton.disabled = false;
       const downloadHindiSubtitlesBtn = getDownloadButton({
@@ -71,13 +80,19 @@ export async function handleTranscription(mediaFile, cardId) {
         content: srt,
         filename: "subtitles.hi.srt",
       });
+      buttonGroup.removeChild(transcribeButton);
       buttonGroup.appendChild(downloadHindiSubtitlesBtn);
     } catch (error) {
       console.error("Error during transcription process:", error.message);
-      banner.textContent = "Error generating transcript.";
-      banner.setAttribute("data-status", "error");
+      transcribeButton.textContent = "Transcribe";
       transcribeButton.removeAttribute("data-loading");
       transcribeButton.disabled = false;
+      makeToastForVideoCard({
+        id: cardId,
+        message: "An ewrror occurred during transcription.",
+        type: "error",
+        duration: 10000,
+      });
     }
   };
 
@@ -124,6 +139,7 @@ export async function handleTranslation(cardId) {
       content: srt,
       filename: "subtitles.en.srt",
     });
+    buttonGroup.removeChild(translateButton);
     buttonGroup.appendChild(downloadHindiSubtitlesBtn);
   } catch (error) {
     console.error("Error translating transcript:", error.message);

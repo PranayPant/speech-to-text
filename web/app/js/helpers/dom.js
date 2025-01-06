@@ -42,3 +42,14 @@ export function getDownloadButton({ buttonText, content, filename }) {
   });
   return button;
 }
+
+export function makeToastForVideoCard({ id, message, type, duration = 500 }) {
+  const videoCard = getVideoCard(id);
+  const toastDiv = document.createElement("div");
+  toastDiv.classList.add("toast", type);
+  toastDiv.textContent = message;
+  videoCard.appendChild(toastDiv);
+  setTimeout(() => {
+    videoCard.removeChild(toastDiv);
+  }, duration);
+}

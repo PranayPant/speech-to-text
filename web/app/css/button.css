@@ -82,7 +82,7 @@ button[data-type]::before {
 }
 
 button[data-type="download"]::before {
-  content: url("../icons/download.png");
+  content: "\u2B73";
 }
 
 button[data-type="delete"]::before {

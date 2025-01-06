@@ -39,3 +39,13 @@
   background-color: var(--secondary-dark-color);
   color: var(--on-secondary-color);
 }
+
+.success {
+  background-color: var(--success-color);
+  color: var(--on-success-color);
+}
+
+.error {
+  background-color: var(--error-color);
+  color: var(--on-error-color);
+}

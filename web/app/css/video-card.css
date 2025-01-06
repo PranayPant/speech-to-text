@@ -11,9 +11,8 @@
 .video-card {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  width: 600px;
-  height: 600px;
+  padding: 8px;
+  width: 500px;
   position: relative;
   border: 1px solid #ccc;
   border-radius: 16px;
@@ -26,6 +25,7 @@
 }
 
 .video-card video {
+  max-height: 330px;
   flex-grow: 1;
   object-fit: cover;
   border-radius: 16px;
