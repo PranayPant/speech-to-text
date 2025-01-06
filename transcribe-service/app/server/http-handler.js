@@ -59,22 +59,32 @@ export function httpHandler(req, res) {
       });
       req.on("end", async () => {
         const parsedData = JSON.parse(data);
-        const {
-          transcriptId,
-          includeSRT,
-          includeTranscript,
-          includeSentences,
-        } = parsedData;
+        const { includeSentences, includeSRT, includeTranscript } = parsedData;
+        let srt, sentences;
+        console.log("Transcript request received for:", parsedData);
         try {
-          const transcript = await getTranscription({
-            transcriptId,
-            includeTranscript,
-            includeSentences,
-            includeSRT,
+          const { status, transcript } = await getTranscription({
+            includeTranscript: true,
+            includeSentences: false,
+            includeSRT: false,
           });
+          if (status === "completed") {
+            ({ sentences, srt } = await getTranscription({
+              includeSentences,
+              includeSRT,
+              includeTranscript: false,
+            }));
+          }
           console.log("Transcript details:", transcript);
           res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify(transcript));
+          res.end(
+            JSON.stringify({
+              status,
+              transcript: includeTranscript && transcript,
+              sentences,
+              srt,
+            })
+          );
         } catch (error) {
           console.error("Error fetching transcript:", error);
           res.writeHead(500, { "Content-Type": "application/json" });

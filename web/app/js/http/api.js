@@ -8,8 +8,12 @@ export async function uploadBinaryData(binaryData) {
       "Content-Type": "application/octet-stream",
     },
   });
-  const { uploadUrl } = await response.json();
 
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+
+  const { uploadUrl } = await response.json();
   return uploadUrl;
 }
 
@@ -18,8 +22,12 @@ export async function initiateTranscription(uploadUrl) {
     method: "POST",
     body: JSON.stringify({ uploadUrl }),
   });
-  const { transcriptId } = await response.json();
 
+  if (!response.ok) {
+    throw new Error(`Transcription initiation failed: ${response.statusText}`);
+  }
+
+  const { transcriptId } = await response.json();
   return transcriptId;
 }
 
@@ -28,6 +36,10 @@ export async function getTranscriptDetails(params) {
     method: "POST",
     body: JSON.stringify(params),
   });
+
+  if (!response.ok) {
+    throw new Error(`Fetching transcript details failed: ${response.statusText}`);
+  }
 
   const transcriptDetails = await response.json();
   return transcriptDetails;
@@ -38,6 +50,10 @@ export async function postTranslation(params) {
     method: "POST",
     body: JSON.stringify(params),
   });
+
+  if (!response.ok) {
+    throw new Error(`Translation failed: ${response.statusText}`);
+  }
 
   const { translationId } = await response.json();
   return translationId;

@@ -15,7 +15,7 @@ async function pollTranscript(transcriptId) {
       try {
         const { status, srt } = await getTranscriptDetails({
           transcriptId,
-          includeSrt: true,
+          includeSRT: true,
         });
         console.log("Transcript status:", status);
         if (status === "completed") {
@@ -53,24 +53,32 @@ export async function handleTranscription(mediaFile, cardId) {
 
   const reader = new FileReader();
   reader.onload = async function (event) {
-    const dataBuffer = event.target.result;
-    console.log("Transcribe request sent for media card", cardId);
-    const uploadUrl = await uploadBinaryData(dataBuffer);
-    banner.textContent = "Processing media file...";
-    const transcriptId = await initiateTranscription(uploadUrl);
-    banner.textContent = "Generating transcript...";
-    const { srt } = await pollTranscript(transcriptId);
-    banner.textContent = "Transcript generated!";
-    banner.setAttribute("data-status", "success");
-    transcribeButton.removeAttribute("data-loading");
-    translateButton.disabled = false;
-    const downloadHindiSubtitlesBtn = getDownloadButton({
-      buttonText: "Download Hindi Subtitles",
-      content: srt,
-      filename: "subtitles.hi.srt",
-    });
-    buttonGroup.appendChild(downloadHindiSubtitlesBtn);
+    try {
+      const dataBuffer = event.target.result;
+      console.log("Transcribe request sent for media card", cardId);
+      const uploadUrl = await uploadBinaryData(dataBuffer);
+      banner.textContent = "Processing media file...";
+      const transcriptId = await initiateTranscription(uploadUrl);
+      banner.textContent = "Generating transcript...";
+      const { srt } = await pollTranscript(transcriptId);
+      banner.textContent = "Transcript generated!";
+      banner.setAttribute("data-status", "success");
+      transcribeButton.removeAttribute("data-loading");
+      translateButton.disabled = false;
+      const downloadHindiSubtitlesBtn = getDownloadButton({
+        buttonText: "Download Hindi Subtitles",
+        content: srt,
+        filename: "subtitles.hi.srt",
+      });
+      buttonGroup.appendChild(downloadHindiSubtitlesBtn);
+    } catch (error) {
+      console.error("Error during transcription process:", error.message);
+      banner.textContent = "Error generating transcript.";
+      banner.setAttribute("data-status", "error");
+      transcribeButton.removeAttribute("data-loading");
+    }
   };
+
   reader.onerror = function (error) {
     console.error("Error reading video file:", error);
   };
