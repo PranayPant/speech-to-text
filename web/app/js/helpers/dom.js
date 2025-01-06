@@ -25,9 +25,10 @@ export function getProgressBar(id) {
   return progressBar;
 }
 
-export function getDownloadButton({buttonText, content, filename}) {
+export function getDownloadButton({ buttonText, content, filename }) {
   const button = document.createElement("button");
   button.textContent = buttonText;
+  button.setAttribute("data-type", "download");
   button.classList.add("secondary-dark");
   button.addEventListener("click", function () {
     const blob = new Blob([content], { type: "text/plain" });

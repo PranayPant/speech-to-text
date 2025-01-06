@@ -3,8 +3,7 @@
 //   sendTranslateRequest,
 // } from "./websocket/index.js";
 import { nanoid } from "./utils/nanoid.js";
-import { getVideoCard } from "./helpers/dom.js";
-import { handleTranscription } from "./http/helpers.js";
+import { handleTranscription, handleTranslation } from "./http/helpers.js";
 
 document
   .getElementById("mediaInput")
@@ -49,10 +48,7 @@ function handleVideoUpload(event) {
     translateButton.className = "primary";
     translateButton.textContent = "Translate";
     translateButton.addEventListener("click", function () {
-      // sendTranslateRequest(
-      //   getVideoCard(id).getAttribute("data-transcript-id"),
-      //   id
-      // );
+      handleTranslation(id);
     });
 
     const buttonGroup = document.createElement("div");

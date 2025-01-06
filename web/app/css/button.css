@@ -9,10 +9,8 @@ button {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  @media (min-width: 768px) {
-    max-width: 100px;
-  }
   transition: background-color 0.3s;
+  max-width: fit-content;
 }
 
 button:hover {
@@ -67,4 +65,26 @@ button[data-loading]::before {
   100% {
     transform: rotate(360deg);
   }
+}
+
+button[data-type] {
+  position: relative;
+  padding-left: 32px;
+}
+
+button[data-type]::before {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+}
+
+button[data-type="download"]::before {
+  content: url("../icons/download.png");
+}
+
+button[data-type="delete"]::before {
+  content: url("../icons/delete.png");
 }

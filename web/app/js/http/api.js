@@ -1,6 +1,7 @@
-export async function uploadBinaryData(binaryData) {
+export async function uploadBinaryData(binaryData, mimeType) {
   const formData = new FormData();
-  formData.append("blob", new Blob([binaryData]), "audio.mp3");
+  console.log("Uploading media file...", mimeType);
+  formData.append("blob", new Blob([binaryData], { type: mimeType }));
   const response = await fetch("/api/upload", {
     method: "POST",
     body: formData,
@@ -38,7 +39,9 @@ export async function getTranscriptDetails(params) {
   });
 
   if (!response.ok) {
-    throw new Error(`Fetching transcript details failed: ${response.statusText}`);
+    throw new Error(
+      `Fetching transcript details failed: ${response.statusText}`
+    );
   }
 
   const transcriptDetails = await response.json();
@@ -55,6 +58,6 @@ export async function postTranslation(params) {
     throw new Error(`Translation failed: ${response.statusText}`);
   }
 
-  const { translationId } = await response.json();
-  return translationId;
+  const translationDetails = await response.json();
+  return translationDetails;
 }

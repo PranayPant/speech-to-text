@@ -96,6 +96,7 @@ export function httpHandler(req, res) {
       break;
     }
     case "/translate": {
+      console.log("Translate request received");
       let data = "";
       req.on("data", (chunk) => {
         data += chunk;
@@ -103,6 +104,7 @@ export function httpHandler(req, res) {
       req.on("end", async () => {
         const parsedData = JSON.parse(data);
         try {
+          console.log("Translating transcript with:", parsedData);
           const translationDetails = await getTranslation(parsedData);
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(translationDetails));
