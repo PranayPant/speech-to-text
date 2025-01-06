@@ -131,6 +131,7 @@ export async function handleTranslation(cardId) {
       status: "error",
     });
     translateButton.removeAttribute("data-loading");
+    translateButton.textContent = "Translate";
     translateButton.disabled = false;
   }
 }
