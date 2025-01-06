@@ -1,0 +1,57 @@
+.video-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 8px;
+  padding: 8px;
+}
+
+.video-card {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  width: 500px;
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #f8f8f8;
+}
+
+.video-card .button-group {
+  margin-top: 16px;
+}
+
+.video-card video {
+  height: 330px;
+  flex-grow: 1;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.video-card .delete-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.video-card .delete-icon:hover {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}

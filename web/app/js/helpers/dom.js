@@ -6,7 +6,7 @@ export function getAppBanner() {
   return document.querySelector("div#app-banner");
 }
 
-export function getProgressBar(id, event) {
+export function getProgressBar(id) {
   const videoCard = getVideoCard(id);
   let progressBar = videoCard.querySelector("div.banner");
 
@@ -21,14 +21,14 @@ export function getProgressBar(id, event) {
     });
     progressBar.appendChild(closeButton);
   }
-  progressBar.setAttribute("data-event", event);
 
   return progressBar;
 }
 
-export function getDownloadButton({buttonText, content, filename}) {
+export function getDownloadButton({ buttonText, content, filename }) {
   const button = document.createElement("button");
   button.textContent = buttonText;
+  button.setAttribute("data-type", "download");
   button.classList.add("secondary-dark");
   button.addEventListener("click", function () {
     const blob = new Blob([content], { type: "text/plain" });
@@ -41,4 +41,17 @@ export function getDownloadButton({buttonText, content, filename}) {
     document.body.removeChild(a);
   });
   return button;
+}
+
+export function makeToastForVideoCard({ id, message, status, duration = 3000 }) {
+  const videoCard = getVideoCard(id);
+  const existingToast = videoCard.querySelector("div.toast");
+  const toastDiv = existingToast ?? document.createElement("div");
+  toastDiv.classList.add("toast");
+  toastDiv.setAttribute("data-status", status);
+  toastDiv.textContent = message;
+  if (!existingToast) videoCard.appendChild(toastDiv);
+  setTimeout(() => {
+    videoCard.removeChild(toastDiv);
+  }, duration);
 }

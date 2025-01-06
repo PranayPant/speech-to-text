@@ -1,18 +1,14 @@
-import {
-  sendTranscribeRequest,
-  sendTranslateRequest,
-} from "./websocket/index.js";
 import { nanoid } from "./utils/nanoid.js";
-import { getVideoCard } from "./helpers/dom.js";
+import { handleTranscription, handleTranslation } from "./http/helpers.js";
 
 document
   .getElementById("mediaInput")
-  .addEventListener("change", handleVideoUpload);
+  .addEventListener("change", handleVideoSelection);
 document
   .getElementById("clearButton")
-  .addEventListener("click", clearVideoUploads);
+  .addEventListener("click", clearVideoSelections);
 
-function handleVideoUpload(event) {
+function handleVideoSelection(event) {
   const files = event.target.files;
   const videoContainer = document.getElementById("videoContainer");
 
@@ -39,7 +35,7 @@ function handleVideoUpload(event) {
     transcribeButton.className = "primary";
     transcribeButton.textContent = "Transcribe";
     transcribeButton.addEventListener("click", function () {
-      sendTranscribeRequest(file, id);
+      handleTranscription(file, id);
     });
 
     const translateButton = document.createElement("button");
@@ -48,10 +44,7 @@ function handleVideoUpload(event) {
     translateButton.className = "primary";
     translateButton.textContent = "Translate";
     translateButton.addEventListener("click", function () {
-      sendTranslateRequest(
-        getVideoCard(id).getAttribute("data-transcript-id"),
-        id
-      );
+      handleTranslation(id);
     });
 
     const buttonGroup = document.createElement("div");
@@ -66,7 +59,7 @@ function handleVideoUpload(event) {
   }
 }
 
-function clearVideoUploads() {
+function clearVideoSelections() {
   const mediaInput = document.getElementById("mediaInput");
   const videoContainer = document.getElementById("videoContainer");
 

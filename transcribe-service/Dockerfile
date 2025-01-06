@@ -14,7 +14,7 @@ RUN npm install
 EXPOSE 8000
 
 # Install ffmpeg
-RUN apk add --no-cache ffmpeg
+RUN apk add ffmpeg
 
 # Start the application
 CMD ["node", "./server/index.js"]

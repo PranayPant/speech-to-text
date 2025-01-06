@@ -1,6 +1,7 @@
-@import url('./banner.css');
-@import url('./theme.css');
-@import url('./button.css');
+@import url("./banner.css");
+@import url("./theme.css");
+@import url("./button.css");
+@import url("./video-card.css");
 
 body {
   padding: 16px;
@@ -8,9 +9,11 @@ body {
   flex-direction: column;
   gap: 16px;
 }
+
 body main {
   margin-top: 32px;
 }
+
 .flex-container {
   display: flex;
   flex-direction: row;
@@ -18,52 +21,25 @@ body main {
   align-items: center;
 }
 
-.video-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin: 8px;
-  padding: 8px;
-}
-
-.video-container video {
-  width: 500px;
-  height: 300px;
-  object-fit: cover;
-}
-
-.video-card {
-  position: relative;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f8f8f8;
-}
-
-.video-card .delete-icon {
+.toast {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
+  width: max-content;
+  padding: 8px;
+  color: white;
+  border-radius: 8px;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: slide-in 0.5s ease-out;
 }
 
-.video-card .delete-icon:hover {
-  animation: shake 0.5s;
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: rotate(0deg);
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
   }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
-
