@@ -1,20 +1,22 @@
 export async function uploadBinaryData(binaryData, mimeType) {
   console.log("Uploading media file...", mimeType);
   const blob = new Blob([binaryData], { type: mimeType });
-  const response = await fetch("/api/upload", {
+  const response = await fetch("https://api.assemblyai.com/v2/upload", {
     method: "POST",
     body: blob,
     headers: {
       "Content-Type": "application/octet-stream",
+      Authorization: "a927b5ae663b4216a02cbe07a0de46cf",
     },
+    maxBodyLength: 5 * 1024 * 1024 * 1024, //5 GB
   });
 
   if (!response.ok) {
     throw new Error(`Upload failed: ${response.statusText}`);
   }
 
-  const { uploadUrl } = await response.json();
-  return uploadUrl;
+  const { upload_url } = await response.json();
+  return upload_url;
 }
 
 export async function initiateTranscription(uploadUrl) {
