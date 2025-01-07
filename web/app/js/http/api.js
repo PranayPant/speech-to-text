@@ -30,7 +30,7 @@ export async function uploadBinaryDataInChunks(binaryData, mimeType) {
         "x-total-chunks": totalChunks,
         "x-file-size": blob.size,
         "x-chunk-size": blobPart.size,
-        "x-chunk-offset": index * blobPart.size,
+        "x-chunk-offset": index * UPLOAD_CHUNK_SIZE,
         "content-type": mimeType,
         "content-length": blobPart.size,
       },
