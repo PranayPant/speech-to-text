@@ -50,7 +50,11 @@ export async function handleTranscription(mediaFile, cardId) {
       const mimeType = mediaFile.type;
       console.log("Sending transcribe request sent for media card", cardId);
       transcribeButton.textContent = "Uploading media...";
-      const uploadUrl = await uploadBinaryDataInChunks(dataBuffer, mimeType);
+      const { uploadUrl } = await uploadBinaryDataInChunks(
+        dataBuffer,
+        mimeType
+      );
+      console.log("uploadUrl", uploadUrl);
       transcribeButton.textContent = "Processing...";
       const transcriptId = await initiateTranscription(uploadUrl);
       transcribeButton.textContent = "Generating transcript...";

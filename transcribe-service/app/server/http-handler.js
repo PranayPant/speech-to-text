@@ -1,7 +1,9 @@
-import { uploadExtractedAudio } from "../helpers/upload.js";
+import fs from "fs";
+
+import { uploadExtractedAudio, extractAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
-import { postTranscription } from "../api.js";
+import { postTranscription, uploadAudioToAssemblyAI } from "../api.js";
 
 let mediaBuffer = [];
 let mediaChunksReceived = 0;
@@ -14,6 +16,7 @@ export function httpHandler(req, res) {
   }
 
   let data = [];
+
   req.on("data", (chunk) => {
     data.push(chunk);
   });
@@ -25,35 +28,49 @@ export function httpHandler(req, res) {
           const chunkIndex = parseInt(req.headers["x-chunk-index"]);
           const totalChunks = parseInt(req.headers["x-total-chunks"]);
           const byteOffset = parseInt(req.headers["x-chunk-offset"]);
-          const chunkSize = parseInt(req.headers["x-chunk-size"]);
-          const mimeType = req.headers["content-type"];
+
           mediaChunksReceived++;
           const isLastChunk = mediaChunksReceived === totalChunks;
 
           if (mediaBuffer.length === 0) {
             mediaBuffer = new Array(totalChunks);
           }
-          mediaBuffer[chunkIndex] = data;
+          const buf = Buffer.concat(data);
+
+          mediaBuffer[chunkIndex] = buf;
+
+          const fileStream = fs.createWriteStream("./uploaded_video.mp4", {
+            flags: "a",
+            start: byteOffset,
+          });
+
+          fileStream.write(buf);
+          fileStream.end();
+
+          fileStream.on("error", (error) => {
+            console.error("Error writing to file stream:", error.message);
+          });
 
           console.log(
-            "Chunk:",
+            "Chunk index",
             chunkIndex,
-            "chunks received:",
-            mediaChunksReceived,
-            "is last chunk:",
-            isLastChunk
+            "of size",
+            (buf.length / (1024 * 1024)).toFixed(2),
+            "MB, received so far",
+            mediaChunksReceived
           );
 
           if (isLastChunk) {
             console.log("Received last chunk");
-            const buffer = Buffer.from(mediaBuffer);
-            console.log(
-              "Received binary data of size:",
-              (buffer.byteLength / (1024 * 1024)).toFixed(2),
-              "MB"
-            );
-            const uploadUrl = await uploadExtractedAudio(buffer);
-            console.log("Upload URL:", uploadUrl);
+
+            // Extract audio from the uploaded video
+            const audioPath = "./extracted_audio.mp3";
+            await extractAudio("./uploaded_video.mp4", audioPath);
+            const audioBuffer = fs.readFileSync(audioPath);
+            console.log("Extracted audio of size:", (audioBuffer.length / (1024 * 1024)).toFixed(2), "MB");
+            const response = await uploadAudioToAssemblyAI(audioBuffer);
+            const uploadUrl = response.data.upload_url;
+
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ uploadUrl, status: "completed" }));
           } else {

@@ -29,10 +29,10 @@ export async function uploadBinaryDataInChunks(binaryData, mimeType) {
         "x-chunk-index": index,
         "x-total-chunks": totalChunks,
         "x-file-size": blob.size,
-        'x-chunk-size': blobPart.size,
-        'x-chunk-offset': index * blobPart.size,
-        'content-type': mimeType,
-        'content-length': blobPart.size,
+        "x-chunk-size": blobPart.size,
+        "x-chunk-offset": index * blobPart.size,
+        "content-type": mimeType,
+        "content-length": blobPart.size,
       },
     });
   });
@@ -46,13 +46,13 @@ export async function uploadBinaryDataInChunks(binaryData, mimeType) {
   //   new Blob(blobParts, { type: mimeType }),
   //   mimeType
   // );
-
+  console.log("uploadResponses", uploadResponses);
   const endTime = Date.now();
   const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
   console.log("Upload complete", uploadUrl);
   console.log("Time taken:", timeTaken, "seconds");
 
-  return uploadUrl;
+  return { uploadUrl };
 }
 
 export async function uploadBinaryData(
@@ -79,8 +79,7 @@ export async function uploadBinaryData(
     throw new Error(`Upload failed: ${response.statusText}`);
   }
 
-  const { uploadUrl } = await response.json();
-  return uploadUrl;
+  return await response.json();
 }
 
 export async function initiateTranscription(uploadUrl) {
