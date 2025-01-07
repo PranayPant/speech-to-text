@@ -8,6 +8,7 @@ import {
   initiateTranscription,
   getTranscriptDetails,
   postTranslation,
+  uploadBinaryDataInChunks,
 } from "./api.js";
 
 async function pollTranscript(transcriptId) {
@@ -47,9 +48,9 @@ export async function handleTranscription(mediaFile, cardId) {
     try {
       const dataBuffer = event.target.result;
       const mimeType = mediaFile.type;
-      console.log("Transcribe request sent for media card", cardId);
+      console.log("Sending transcribe request sent for media card", cardId);
       transcribeButton.textContent = "Uploading media...";
-      const uploadUrl = await uploadBinaryData(dataBuffer, mimeType);
+      const uploadUrl = await uploadBinaryDataInChunks(dataBuffer, mimeType);
       transcribeButton.textContent = "Processing...";
       const transcriptId = await initiateTranscription(uploadUrl);
       transcribeButton.textContent = "Generating transcript...";
@@ -70,7 +71,10 @@ export async function handleTranscription(mediaFile, cardId) {
       buttonGroup.removeChild(transcribeButton);
       buttonGroup.appendChild(downloadHindiSubtitlesBtn);
     } catch (error) {
-      console.error("Error during transcription process:", error.message);
+      console.error(
+        "Error during transcription process:",
+        JSON.stringify(error)
+      );
       transcribeButton.textContent = "Transcribe";
       transcribeButton.removeAttribute("data-loading");
       transcribeButton.disabled = false;

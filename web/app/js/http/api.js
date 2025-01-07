@@ -1,13 +1,79 @@
-export async function uploadBinaryData(binaryData, mimeType) {
-  console.log("Uploading media file...", mimeType);
+const UPLOAD_CHUNK_SIZE = 1024 * 1024; // 1MB
+
+export async function uploadBinaryDataInChunks(binaryData, mimeType) {
+  console.log("Uploading media file in chunks...");
+
+  const startTime = Date.now();
+
   const blob = new Blob([binaryData], { type: mimeType });
-  const response = await fetch("/api/upload", {
-    method: "POST",
-    body: blob,
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const totalChunks = Math.ceil(blob.size / UPLOAD_CHUNK_SIZE);
+
+  const blobParts = [];
+  for (let i = 0; i < totalChunks; i++) {
+    blobParts.push(
+      blob.slice(i * UPLOAD_CHUNK_SIZE, (i + 1) * UPLOAD_CHUNK_SIZE)
+    );
+  }
+
+  console.log(
+    "Total file size:",
+    (blob.size / (1024 * 1024)).toFixed(2) + " MB",
+    "totalChunks:",
+    totalChunks
+  );
+
+  const uploadPromises = blobParts.map((blobPart, index) => {
+    return uploadBinaryData(blobPart, mimeType, {
+      isMultiPart: true,
+      headers: {
+        "x-chunk-index": index,
+        "x-total-chunks": totalChunks,
+        "x-file-size": blob.size,
+        'x-chunk-size': blobPart.size,
+        'x-chunk-offset': index * blobPart.size,
+        'content-type': mimeType,
+        'content-length': blobPart.size,
+      },
+    });
   });
+
+  const uploadResponses = await Promise.all(uploadPromises);
+  const uploadUrl = uploadResponses.find(
+    (res) => res.status === "completed"
+  )?.uploadUrl;
+
+  // const uploadUrl = await uploadBinaryData(
+  //   new Blob(blobParts, { type: mimeType }),
+  //   mimeType
+  // );
+
+  const endTime = Date.now();
+  const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+  console.log("Upload complete", uploadUrl);
+  console.log("Time taken:", timeTaken, "seconds");
+
+  return uploadUrl;
+}
+
+export async function uploadBinaryData(
+  binaryData,
+  mimeType,
+  { headers = {}, isMultiPart = false }
+) {
+  const blob = new Blob([binaryData], { type: mimeType });
+  console.log("Uploading media file of size", blob.size);
+
+  const response = await fetch(
+    `/api/${isMultiPart ? "multipart-upload" : "upload"}`,
+    {
+      method: "POST",
+      body: blob,
+      headers: {
+        "Content-Type": "application/octet-stream",
+        ...headers,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Upload failed: ${response.statusText}`);

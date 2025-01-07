@@ -3,16 +3,21 @@ import ffmpeg from "fluent-ffmpeg";
 
 import { uploadAudioToAssemblyAI } from "../api.js";
 
-async function extractAudio(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .output(outputPath)
-      .audioCodec("libmp3lame")
-      .audioQuality(0) // Highest quality
-      .on("end", resolve)
-      .on("error", reject)
-      .run();
-  });
+export async function extractAudio(inputPath, outputPath) {
+  try {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .output(outputPath)
+        .audioCodec("libmp3lame")
+        .audioQuality(0) // Highest quality
+        .on("end", resolve)
+        .on("error", reject)
+        .run();
+    });
+  } catch (error) {
+    console.error("Error extracting audio:", error);
+    throw `Error extracting audio: ${error.message}`;
+  }
 }
 
 export async function uploadExtractedAudio(data) {
