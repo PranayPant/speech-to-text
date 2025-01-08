@@ -67,8 +67,7 @@ export function httpHandler(req, res) {
             totalChunks,
             "of size",
             (buf.length / (1024 * 1024)).toFixed(2),
-            "MB, received so far",
-            mediaChunksReceived
+            "MB"
           );
           fileStream.write(buf);
           fileStream.end();
