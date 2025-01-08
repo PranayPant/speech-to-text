@@ -49,7 +49,7 @@ export function httpHandler(req, res) {
               await lockfile.check(filePath);
               isFileInUse = false;
             } catch (error) {
-              console.error("File in use, retrying 100ms:", error.message);
+              console.error("File in use, retrying in 100ms:", error.message);
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
           }
