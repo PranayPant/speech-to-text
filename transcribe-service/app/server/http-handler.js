@@ -49,8 +49,8 @@ export function httpHandler(req, res) {
               await lockfile.check(filePath);
               isFileInUse = false;
             } catch (error) {
-              console.error("File in use, retrying in 1s:", error.message);
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              console.error("File in use, retrying 100ms:", error.message);
+              await new Promise((resolve) => setTimeout(resolve, 100));
             }
           }
 
@@ -60,7 +60,16 @@ export function httpHandler(req, res) {
           });
 
           const release = await lockfile.lock(filePath);
-
+          console.log(
+            "Writing chunk number",
+            chunkIndex + 1,
+            "/",
+            totalChunks,
+            "of size",
+            (buf.length / (1024 * 1024)).toFixed(2),
+            "MB, received so far",
+            mediaChunksReceived
+          );
           fileStream.write(buf);
           fileStream.end();
           release();
@@ -68,15 +77,6 @@ export function httpHandler(req, res) {
           fileStream.on("error", (error) => {
             console.error("Error writing to file stream:", error.message);
           });
-
-          console.log(
-            "Chunk index",
-            chunkIndex,
-            "of size",
-            (buf.length / (1024 * 1024)).toFixed(2),
-            "MB, received so far",
-            mediaChunksReceived
-          );
 
           if (isLastChunk) {
             console.log("Received last chunk");
