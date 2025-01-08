@@ -1,4 +1,5 @@
 import fs from "fs";
+import lockfile from "proper-lockfile";
 
 import { uploadExtractedAudio, extractAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
@@ -7,6 +8,8 @@ import { postTranscription, uploadAudioToAssemblyAI } from "../api.js";
 
 let mediaBuffer = [];
 let mediaChunksReceived = 0;
+const filePath = "./uploaded_video.mp4";
+let fileStream = fs.createWriteStream(filePath, { flags: "a" });
 
 export function httpHandler(req, res) {
   if (req.method !== "POST") {
@@ -39,13 +42,28 @@ export function httpHandler(req, res) {
 
           mediaBuffer[chunkIndex] = buf;
 
-          const fileStream = fs.createWriteStream("./uploaded_video.mp4", {
+          let isFileInUse = true;
+
+          while (isFileInUse) {
+            try {
+              await lockfile.check(filePath);
+              isFileInUse = false;
+            } catch (error) {
+              console.error("File in use, retrying in 1s:", error.message);
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+
+          fileStream = fs.createWriteStream(filePath, {
             flags: "a",
             start: byteOffset,
           });
 
+          const release = await lockfile.lock(filePath);
+
           fileStream.write(buf);
           fileStream.end();
+          release();
 
           fileStream.on("error", (error) => {
             console.error("Error writing to file stream:", error.message);
@@ -65,9 +83,13 @@ export function httpHandler(req, res) {
 
             // Extract audio from the uploaded video
             const audioPath = "./extracted_audio.mp3";
-            await extractAudio("./uploaded_video.mp4", audioPath);
+            await extractAudio(filePath, audioPath);
             const audioBuffer = fs.readFileSync(audioPath);
-            console.log("Extracted audio of size:", (audioBuffer.length / (1024 * 1024)).toFixed(2), "MB");
+            console.log(
+              "Extracted audio of size:",
+              (audioBuffer.length / (1024 * 1024)).toFixed(2),
+              "MB"
+            );
             const response = await uploadAudioToAssemblyAI(audioBuffer);
             const uploadUrl = response.data.upload_url;
 

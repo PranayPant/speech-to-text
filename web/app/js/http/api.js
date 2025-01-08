@@ -22,31 +22,27 @@ export async function uploadBinaryDataInChunks(binaryData, mimeType) {
     totalChunks
   );
 
-  const uploadPromises = blobParts.map((blobPart, index) => {
-    return uploadBinaryData(blobPart, mimeType, {
+  const uploadResponses = [];
+  for (let i = 0; i < blobParts.length; i++) {
+    const uploadResponse = await uploadBinaryData(blobParts[i], mimeType, {
       isMultiPart: true,
       headers: {
-        "x-chunk-index": index,
+        "x-chunk-index": i,
         "x-total-chunks": totalChunks,
         "x-file-size": blob.size,
-        "x-chunk-size": blobPart.size,
-        "x-chunk-offset": index * UPLOAD_CHUNK_SIZE,
+        "x-chunk-size": blobParts[i].size,
+        "x-chunk-offset": i * UPLOAD_CHUNK_SIZE,
         "content-type": mimeType,
-        "content-length": blobPart.size,
+        "content-length": blobParts[i].size,
       },
     });
-  });
+    uploadResponses.push(uploadResponse);
+  }
 
-  const uploadResponses = await Promise.all(uploadPromises);
   const uploadUrl = uploadResponses.find(
     (res) => res.status === "completed"
   )?.uploadUrl;
 
-  // const uploadUrl = await uploadBinaryData(
-  //   new Blob(blobParts, { type: mimeType }),
-  //   mimeType
-  // );
-  console.log("uploadResponses", uploadResponses);
   const endTime = Date.now();
   const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
   console.log("Upload complete", uploadUrl);
