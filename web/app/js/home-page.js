@@ -1,11 +1,7 @@
 import { initiateTranscription, postTranslation } from "./http/api.js";
 import { processGoogleDriveLink } from "./utils/google-drive.js";
 import { pollTranscript } from "./helpers/transcript.js";
-import {
-  makeToast,
-  getDownloadButton,
-  downloadContent,
-} from "./helpers/dom.js";
+import { makeToast, downloadContent } from "./helpers/dom.js";
 
 const input = document.querySelector("input#google-drive-link");
 
@@ -14,11 +10,11 @@ transcribeButton.addEventListener("click", handleTranscribeEvent);
 
 const translateButton = document.querySelector("button#translate");
 translateButton.addEventListener("click", handleTranslateEvent);
-
-const buttonGroup = document.querySelector("div.button-group");
+translateButton.disabled = true;
 
 async function handleTranscribeEvent() {
   try {
+    translateButton.disabled = true;
     transcribeButton.disabled = true;
     transcribeButton.setAttribute("data-loading", true);
     transcribeButton.textContent = "Transcribing...";
