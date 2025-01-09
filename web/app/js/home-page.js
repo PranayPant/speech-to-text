@@ -34,6 +34,7 @@ async function handleTranscribeEvent() {
     downloadContent({ content: srt, filename: "subtitles.hi.srt" });
   } catch (error) {
     transcribeButton.disabled = false;
+    translateButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
     transcribeButton.textContent = "Transcribe";
     makeToast({
@@ -53,11 +54,13 @@ async function handleTranslateEvent() {
       });
       return;
     }
+    transcribeButton.disabled = true;
     translateButton.disabled = true;
     translateButton.setAttribute("data-loading", true);
     translateButton.textContent = "Translating...";
     const { srt } = await postTranslation({ transcriptId, includeSRT: true });
     translateButton.disabled = false;
+    transcribeButton.disabled = false;
     translateButton.removeAttribute("data-loading");
     translateButton.textContent = "Translate";
     makeToast({
@@ -66,6 +69,7 @@ async function handleTranslateEvent() {
     });
     downloadContent({ content: srt, filename: "subtitles.en.srt" });
   } catch (error) {
+    transcribeButton.disabled = false;
     translateButton.disabled = false;
     translateButton.removeAttribute("data-loading");
     translateButton.textContent = "Translate";
