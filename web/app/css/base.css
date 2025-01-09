@@ -1,8 +1,3 @@
-@import url("./banner.css");
-@import url("./theme.css");
-@import url("./button.css");
-@import url("./video-card.css");
-
 body {
   padding: 16px;
   display: flex;

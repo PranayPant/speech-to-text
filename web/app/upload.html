@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script type="module" src="./js/home-page.js"></script>
-    <link rel="stylesheet" href="./css/home-page.css" />
+    <script type="module" src="./js/upload-page.js"></script>
+    <link rel="stylesheet" href="./css/upload-page.css" />
     <link rel="icon" href="./favicon.png" type="image/x-icon" />
     <title>Speech to Text</title>
   </head>
@@ -14,15 +14,16 @@
       <h1 class="flex-container">Speech to Text</h1>
       <div class="flex-container">
         <input
-          id="google-drive-link"
-          placeholder="Enter Google Drive shareable link..."
-          type="search"
+          type="file"
+          id="mediaInput"
+          multiple
+          accept="audio/*,video/*,.mkv"
         />
         <div class="button-group">
-          <button id="transcribe" class="primary">Transcribe</button>
-          <button id="translate" class="primary">Translate</button>
+          <button id="clearButton" class="primary-dark">Clear</button>
         </div>
       </div>
+      <div id="videoContainer" class="video-container"></div>
     </main>
   </body>
 </html>

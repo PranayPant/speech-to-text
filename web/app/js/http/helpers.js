@@ -3,36 +3,12 @@ import {
   getVideoCard,
   makeToastForVideoCard,
 } from "../helpers/dom.js";
+import { pollTranscript } from "../helpers/transcript.js";
 import {
   uploadBinaryData,
   initiateTranscription,
-  getTranscriptDetails,
   postTranslation,
 } from "./api.js";
-
-async function pollTranscript(transcriptId) {
-  return new Promise((resolve, reject) => {
-    const checkStatus = async () => {
-      try {
-        const { status, srt } = await getTranscriptDetails({
-          transcriptId,
-          includeSRT: true,
-        });
-        console.log("Transcript status:", status);
-        if (status === "completed") {
-          console.log("Transcript completed");
-          resolve({ srt });
-          clearInterval(intervalId);
-        }
-      } catch (error) {
-        clearInterval(intervalId);
-        reject(error.message);
-      }
-    };
-
-    const intervalId = setInterval(checkStatus, 5000);
-  });
-}
 
 export async function handleTranscription(mediaFile, cardId) {
   const videoCard = getVideoCard(cardId);
