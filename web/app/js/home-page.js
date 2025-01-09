@@ -24,6 +24,7 @@ async function handleTranscribeEvent() {
     const { srt } = await pollTranscript(transcriptId);
     translateButton.setAttribute("data-transcript-id", transcriptId);
     transcribeButton.disabled = false;
+    translateButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
     transcribeButton.textContent = "Transcribe";
     makeToast({
