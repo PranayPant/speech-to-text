@@ -1,7 +1,7 @@
 import { initiateTranscription, postTranslation } from "./http/api.js";
 import { processGoogleDriveLink } from "./utils/google-drive.js";
 import { pollTranscript } from "./helpers/transcript.js";
-import { makeToast, getDownloadButton } from "./helpers/dom.js";
+import { makeToast, downloadContent } from "./helpers/dom.js";
 
 const input = document.querySelector("input#google-drive-link");
 
@@ -10,11 +10,11 @@ transcribeButton.addEventListener("click", handleTranscribeEvent);
 
 const translateButton = document.querySelector("button#translate");
 translateButton.addEventListener("click", handleTranslateEvent);
-
-const buttonGroup = document.querySelector("div.button-group");
+translateButton.disabled = true;
 
 async function handleTranscribeEvent() {
   try {
+    translateButton.disabled = true;
     transcribeButton.disabled = true;
     transcribeButton.setAttribute("data-loading", true);
     transcribeButton.textContent = "Transcribing...";
@@ -24,21 +24,17 @@ async function handleTranscribeEvent() {
     const { srt } = await pollTranscript(transcriptId);
     translateButton.setAttribute("data-transcript-id", transcriptId);
     transcribeButton.disabled = false;
+    translateButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
     transcribeButton.textContent = "Transcribe";
     makeToast({
       message: "Transcription completed!",
       status: "success",
     });
-    const downloadHindiSubtitlesBtn = getDownloadButton({
-      buttonText: "Hindi Subtitles",
-      content: srt,
-      filename: "subtitles.hi.srt",
-    });
-
-    buttonGroup.appendChild(downloadHindiSubtitlesBtn);
+    downloadContent({ content: srt, filename: "subtitles.hi.srt" });
   } catch (error) {
     transcribeButton.disabled = false;
+    translateButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
     transcribeButton.textContent = "Transcribe";
     makeToast({
@@ -58,25 +54,22 @@ async function handleTranslateEvent() {
       });
       return;
     }
+    transcribeButton.disabled = true;
     translateButton.disabled = true;
     translateButton.setAttribute("data-loading", true);
     translateButton.textContent = "Translating...";
     const { srt } = await postTranslation({ transcriptId, includeSRT: true });
     translateButton.disabled = false;
+    transcribeButton.disabled = false;
     translateButton.removeAttribute("data-loading");
     translateButton.textContent = "Translate";
     makeToast({
       message: "Translation completed!",
       status: "success",
     });
-    const downloadEnglishSubtitlesBtn = getDownloadButton({
-      buttonText: "English Subtitles",
-      content: srt,
-      filename: "subtitles.en.srt",
-    });
-
-    buttonGroup.appendChild(downloadEnglishSubtitlesBtn);
+    downloadContent({ content: srt, filename: "subtitles.en.srt" });
   } catch (error) {
+    transcribeButton.disabled = false;
     translateButton.disabled = false;
     translateButton.removeAttribute("data-loading");
     translateButton.textContent = "Translate";
