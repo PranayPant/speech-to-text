@@ -10,7 +10,8 @@
     "ws": "^8.18.0",
     "axios": "^0.21.1",
     "fluent-ffmpeg": "^2.1.2",
-    "openai": "^4.77.0"
+    "openai": "^4.77.0",
+    "googleapis": "^144.0.0"
   },
   "author": "",
   "license": "ISC",

@@ -1,7 +1,8 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
-import { postTranscription } from "../api.js";
+import { postTranscription } from "../api/assemblyai.js";
+import { uploadToGoogleDrive } from "../api/google-drive.js";
 
 export function httpHandler(req, res) {
   if (req.method !== "POST") {
@@ -11,6 +12,24 @@ export function httpHandler(req, res) {
   }
 
   switch (req.url) {
+    case "/test-google-drive": {
+      let data = [];
+      req.on("data", (chunk) => {
+        data.push(chunk);
+      });
+      req.on("end", async () => {
+        try {
+          const response = await uploadToGoogleDrive();
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ response }));
+        } catch (error) {
+          console.error("Error during Google Drive upload:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      break;
+    }
     case "/upload": {
       let data = [];
       req.on("data", (chunk) => {
@@ -59,7 +78,12 @@ export function httpHandler(req, res) {
       });
       req.on("end", async () => {
         const parsedData = JSON.parse(data);
-        const { includeSentences, includeSRT, includeTranscript, transcriptId } = parsedData;
+        const {
+          includeSentences,
+          includeSRT,
+          includeTranscript,
+          transcriptId,
+        } = parsedData;
         let srt, sentences;
         console.log("Transcript request received for:", parsedData);
         try {

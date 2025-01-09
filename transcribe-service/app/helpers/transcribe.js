@@ -1,4 +1,4 @@
-import { fetchAssemblyAITranscript } from "../api.js";
+import { fetchAssemblyAITranscript } from "../api/assemblyai.js";
 
 export async function getTranscription({
   transcriptId,
