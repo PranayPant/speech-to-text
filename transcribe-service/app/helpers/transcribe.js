@@ -14,6 +14,9 @@ export async function getTranscription({
       includeSRT &&
         fetchAssemblyAITranscript({ transcriptId, resource: "/srt" }),
     ]);
+  if (transcriptResponse?.data?.status === "error") {
+    throw new Error("Transcription failed");
+  }
   return {
     status: transcriptResponse?.data?.status,
     transcript: transcriptResponse?.data?.text,

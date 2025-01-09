@@ -1,7 +1,11 @@
 import { initiateTranscription, postTranslation } from "./http/api.js";
 import { processGoogleDriveLink } from "./utils/google-drive.js";
 import { pollTranscript } from "./helpers/transcript.js";
-import { makeToast, getDownloadButton } from "./helpers/dom.js";
+import {
+  makeToast,
+  getDownloadButton,
+  downloadContent,
+} from "./helpers/dom.js";
 
 const input = document.querySelector("input#google-drive-link");
 
@@ -30,13 +34,7 @@ async function handleTranscribeEvent() {
       message: "Transcription completed!",
       status: "success",
     });
-    const downloadHindiSubtitlesBtn = getDownloadButton({
-      buttonText: "Hindi Subtitles",
-      content: srt,
-      filename: "subtitles.hi.srt",
-    });
-
-    buttonGroup.appendChild(downloadHindiSubtitlesBtn);
+    downloadContent({ content: srt, filename: "subtitles.hi.srt" });
   } catch (error) {
     transcribeButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
@@ -69,13 +67,7 @@ async function handleTranslateEvent() {
       message: "Translation completed!",
       status: "success",
     });
-    const downloadEnglishSubtitlesBtn = getDownloadButton({
-      buttonText: "English Subtitles",
-      content: srt,
-      filename: "subtitles.en.srt",
-    });
-
-    buttonGroup.appendChild(downloadEnglishSubtitlesBtn);
+    downloadContent({ content: srt, filename: "subtitles.en.srt" });
   } catch (error) {
     translateButton.disabled = false;
     translateButton.removeAttribute("data-loading");
