@@ -1,7 +1,7 @@
 import { uploadExtractedAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
-import { postTranscription } from "../api.js";
+import { postTranscription } from "../api/assemblyai.js";
 
 export async function wsHandler(ws, message, isBinary) {
   let event, data, id;

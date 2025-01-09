@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { MAX_PAYLOAD_SIZE } from "./constants.js";
+import { MAX_PAYLOAD_SIZE } from "../constants.js";
 
 export async function fetchAssemblyAITranscript({
   transcriptId,
