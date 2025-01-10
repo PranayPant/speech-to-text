@@ -1,15 +1,15 @@
 name: "Start Bunnyshell Environment"
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Make sure Bunnyshell is running
-        uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
-        with:
-          env-id: ${{ secrets.BUNNYSHELL_DEV_ENV_ID }}
-        secrets:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+  keep_dev_warm:
+    name: Make sure Bunnyshell is running
+    uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
+    with:
+      project-id: ${{ secrets.BUNNYSHELL_S2T_PROJECT_ID }}
+      env-id: ${{ secrets.BUNNYSHELL_DEV_ENV_ID }}
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
