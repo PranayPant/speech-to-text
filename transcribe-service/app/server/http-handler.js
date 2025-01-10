@@ -12,18 +12,20 @@ export function httpHandler(req, res) {
   }
 
   switch (req.url) {
-    case "/test-google-drive": {
-      let data = [];
+    case "/drive/upload/text": {
+      let jsonString = "";
       req.on("data", (chunk) => {
-        data.push(chunk);
+        jsonString += chunk;
       });
       req.on("end", async () => {
+        const parsedData = JSON.parse(jsonString);
+        const { data, filename } = parsedData;
         try {
-          const response = await uploadToGoogleDrive();
+          const response = await uploadToGoogleDrive({ data, filename });
           res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ response }));
+          res.end(JSON.stringify(response));
         } catch (error) {
-          console.error("Error during Google Drive upload:", error);
+          console.error("Error creating text file on google drive:", error);
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: error.message }));
         }

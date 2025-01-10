@@ -14,3 +14,7 @@ export function processGoogleDriveLink(link) {
   }
   return null;
 }
+
+export function fileIdToGoogleDriveLink(fileId) {
+  return `https://drive.google.com/file/d/${fileId}/`;
+}

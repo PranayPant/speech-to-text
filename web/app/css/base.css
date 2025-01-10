@@ -29,6 +29,17 @@ body main {
   animation: slide-in 0.5s ease-out;
 }
 
+.toast .link {
+  padding-left: 8px;
+  margin-left: auto;
+  color: white;
+  text-decoration: underline;
+  &:hover {
+    text-decoration: none;
+    cursor: pointer;
+  }
+}
+
 @keyframes slide-in {
   from {
     opacity: 0;

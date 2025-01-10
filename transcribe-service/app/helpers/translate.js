@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 async function translateSentences(params) {
   try {
-    const { transcriptId, id } = params;
+    const { transcriptId, id, model } = params;
     console.log("Translating sentences...", transcriptId);
 
     const { sentences } = await getTranscription({
@@ -19,7 +19,7 @@ async function translateSentences(params) {
       includeSRT: false,
     });
     const translationResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model,
       messages: [
         {
           role: "developer",
@@ -41,7 +41,7 @@ async function translateSentences(params) {
 
 async function translateTranscript(params) {
   try {
-    const { transcriptId, id } = params;
+    const { transcriptId, id, model } = params;
     console.log("Translating transcript...", transcriptId);
 
     const { transcript } = await getTranscription({
@@ -49,9 +49,10 @@ async function translateTranscript(params) {
       includeTranscript: true,
       includeSentences: false,
       includeSRT: false,
+      model,
     });
     const translationResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model,
       messages: [
         {
           role: "developer",
@@ -76,11 +77,13 @@ export async function getTranslation({
   includeTranscript,
   includeSentences,
   transcriptId,
+  model = "gpt-4o",
 }) {
   try {
     const [transcriptResult, sentencesResult] = await Promise.all([
-      includeTranscript && translateTranscript({ transcriptId }),
-      (includeSentences || includeSRT) && translateSentences({ transcriptId }),
+      includeTranscript && translateTranscript({ transcriptId, model }),
+      (includeSentences || includeSRT) &&
+        translateSentences({ transcriptId, model }),
     ]);
 
     const transcript = transcriptResult?.transcript;

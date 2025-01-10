@@ -65,6 +65,8 @@ export function makeToast({
   parentSelector = "body",
   message,
   status,
+  linkMessage,
+  linkHref,
   duration = 3000,
 }) {
   const parentDiv = document.querySelector(parentSelector);
@@ -73,6 +75,13 @@ export function makeToast({
   toastDiv.classList.add("toast");
   toastDiv.setAttribute("data-status", status);
   toastDiv.textContent = message;
+  if (linkMessage) {
+    const link = document.createElement("link");
+    link.textContent = linkMessage;
+    link.classList.add("link");
+    link.href = linkHref;
+    link.rel = "noopener noreferrer";
+  }
   if (!existingToast) parentDiv.appendChild(toastDiv);
   setTimeout(() => {
     parentDiv.removeChild(toastDiv);

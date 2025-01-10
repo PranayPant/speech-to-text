@@ -20,9 +20,31 @@ const drive = google.drive({
   auth,
 });
 
-export async function uploadToGoogleDrive() {
-  const response = await drive.files.list({
-    q: `mimeType='audio/*'`,
-  });
-  return response;
+export async function uploadToGoogleDrive({ data, filename }) {
+  fs.writeFileSync(filename, data, { flag: "w" });
+
+  let response;
+  try {
+    response = await drive.files.create({
+      requestBody: {
+        name: filename,
+        fields: "id",
+        parents: [process.env.GOOGLE_DRIVE_SRT_FOLDER_ID],
+      },
+      media: {
+        mimeType: "text/plain",
+        body: fs.createReadStream(filename),
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading file to Google Drive:", error);
+    throw error;
+  } finally {
+    fs.unlink(filename, (error) => {
+      if (error) {
+        console.error("Error deleting file:", error);
+      }
+    });
+  }
+  return { fileId: response?.data?.id };
 }
