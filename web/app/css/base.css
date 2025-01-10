@@ -3,6 +3,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-x: hidden;
 }
 
 body main {
