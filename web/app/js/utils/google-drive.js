@@ -14,3 +14,15 @@ export function processGoogleDriveLink(link) {
   }
   return null;
 }
+
+export function fileIdToGoogleDriveLink(fileId) {
+  // not accessible from non-localhost webpage
+  const fileLink = `https://drive.google.com/file/d/${fileId}/view`;
+  return fileLink;
+}
+
+export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {
+  const nameWithoutExtension =
+    filename?.substring(0, filename?.lastIndexOf(".")) || "subtitles";
+  return `${nameWithoutExtension}.${language_code}.srt`;
+}

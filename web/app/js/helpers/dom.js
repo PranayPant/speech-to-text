@@ -62,19 +62,38 @@ export function makeToastForVideoCard({
 }
 
 export function makeToast({
-  parentSelector = "body",
+  parentSelector = "div.toast-container",
   message,
   status,
+  linkMessage,
+  linkHref,
+  isCloseable,
   duration = 3000,
 }) {
   const parentDiv = document.querySelector(parentSelector);
-  const existingToast = parentDiv.querySelector("div.toast");
-  const toastDiv = existingToast ?? document.createElement("div");
+  const toastDiv = document.createElement("div");
   toastDiv.classList.add("toast");
   toastDiv.setAttribute("data-status", status);
   toastDiv.textContent = message;
-  if (!existingToast) parentDiv.appendChild(toastDiv);
-  setTimeout(() => {
-    parentDiv.removeChild(toastDiv);
-  }, duration);
+  if (linkMessage && linkHref) {
+    const link = document.createElement("a");
+    link.textContent = linkMessage;
+    link.href = linkHref;
+    link.rel = "noopener noreferrer";
+    link.target = "_blank";
+    toastDiv.appendChild(link);
+  }
+  parentDiv.appendChild(toastDiv);
+  if (isCloseable) {
+    const closeButton = document.createElement("span");
+    closeButton.classList.add("close-button");
+    closeButton.addEventListener("click", function () {
+      parentDiv.removeChild(toastDiv);
+    });
+    toastDiv.appendChild(closeButton);
+  } else {
+    setTimeout(() => {
+      parentDiv.removeChild(toastDiv);
+    }, duration);
+  }
 }

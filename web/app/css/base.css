@@ -3,10 +3,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-x: hidden;
 }
 
 body main {
-  margin-top: 32px;
+  margin-top: 300px;
 }
 
 .flex-container {
@@ -17,25 +18,50 @@ body main {
   flex-wrap: wrap;
 }
 
-.toast {
+.toast-container {
   position: absolute;
-  width: max-content;
+  top: 0;
+  padding: 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 8px;
   color: white;
   border-radius: 8px;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: slide-in 0.5s ease-out;
 }
 
-@keyframes slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+.toast a {
+  padding-left: 8px;
+  margin-left: auto;
+  color: white;
+  text-decoration: underline;
+  color: var(--primary-dark-color);
+  &:hover {
+    text-decoration: none;
+    cursor: pointer;
   }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+}
+
+.close-button {
+  color: black;
+  font-size: 12px;
+  padding: 4px;
+  margin-left: 8px;
+  &::after {
+    content: "\1f5d9";
+  }
+  &:hover {
+    color: white;
+    cursor: pointer;
   }
 }

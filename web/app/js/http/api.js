@@ -60,3 +60,39 @@ export async function postTranslation(params) {
   const translationDetails = await response.json();
   return translationDetails;
 }
+
+export async function uploadToGoogleDrive({ data, filename }) {
+  console.log("Uploading text file to Google Drive...", filename);
+  const response = await fetch("/api/drive/upload/text", {
+    method: "POST",
+    body: JSON.stringify({ data, filename }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+
+  const { fileId } = await response.json();
+  return fileId;
+}
+
+export async function getFileInfo({ fileId }) {
+  console.log("Fetching file info from Google Drive...", fileId);
+  const response = await fetch("/api/drive/get/file", {
+    method: "POST",
+    body: JSON.stringify({ fileId }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fetching file info failed: ${response.statusText}`);
+  }
+
+  const fileInfo = await response.json();
+  return fileInfo;
+}
