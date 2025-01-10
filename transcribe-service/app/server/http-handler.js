@@ -22,7 +22,6 @@ export function httpHandler(req, res) {
         const { fileId } = parsedData;
         try {
           const response = await getFileInfo({ fileId });
-          await setPermission({ fileId });
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(response));
         } catch (error) {
