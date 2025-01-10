@@ -18,9 +18,7 @@ export function processGoogleDriveLink(link) {
 export function fileIdToGoogleDriveLink(fileId) {
   // not accessible from non-localhost webpage
   const fileLink = `https://drive.google.com/file/d/${fileId}/view`;
-  const srtFolderLink =
-    "https://drive.google.com/drive/folders/1KpTIqw9D_cdumHBkvBKQS_-acfkc1H71";
-  return srtFolderLink;
+  return fileLink;
 }
 
 export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {
