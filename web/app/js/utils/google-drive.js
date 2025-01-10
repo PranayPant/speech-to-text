@@ -16,7 +16,11 @@ export function processGoogleDriveLink(link) {
 }
 
 export function fileIdToGoogleDriveLink(fileId) {
-  return `https://drive.google.com/file/d/${fileId}/view`;
+  // not accessible from non-localhost webpage
+  const fileLink = `https://drive.google.com/file/d/${fileId}/view`;
+  const srtFolderLink =
+    "https://drive.google.com/drive/folders/1KpTIqw9D_cdumHBkvBKQS_-acfkc1H71";
+  return srtFolderLink;
 }
 
 export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {
