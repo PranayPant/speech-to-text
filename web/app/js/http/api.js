@@ -78,3 +78,21 @@ export async function uploadToGoogleDrive({ data, filename }) {
   const { fileId } = await response.json();
   return fileId;
 }
+
+export async function getFileInfo({ fileId }) {
+  console.log("Fetching file info from Google Drive...", fileId);
+  const response = await fetch("/api/drive/get/file", {
+    method: "POST",
+    body: JSON.stringify({ fileId }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fetching file info failed: ${response.statusText}`);
+  }
+
+  const fileInfo = await response.json();
+  return fileInfo;
+}

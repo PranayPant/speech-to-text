@@ -1,14 +1,16 @@
 import {
+  getFileInfo,
   initiateTranscription,
   postTranslation,
   uploadToGoogleDrive,
 } from "./http/api.js";
 import {
   fileIdToGoogleDriveLink,
+  filenameToSubtitleFilename,
   processGoogleDriveLink,
 } from "./utils/google-drive.js";
 import { pollTranscript } from "./helpers/transcript.js";
-import { makeToast, downloadContent } from "./helpers/dom.js";
+import { makeToast } from "./helpers/dom.js";
 
 const input = document.querySelector("input#google-drive-link");
 
@@ -26,10 +28,14 @@ async function handleTranscribeEvent() {
     transcribeButton.setAttribute("data-loading", true);
     transcribeButton.textContent = "Transcribing...";
     const googleDriveLink = input.value;
-    const { audioUrl } = processGoogleDriveLink(googleDriveLink);
+    const { audioUrl, fileId } = processGoogleDriveLink(googleDriveLink);
+    getFileInfo({ fileId }).then(({ name }) => {
+      transcribeButton.setAttribute("data-file-name", name);
+    });
     const transcriptId = await initiateTranscription(audioUrl);
-    const { srt } = await pollTranscript(transcriptId);
     translateButton.setAttribute("data-transcript-id", transcriptId);
+
+    const { srt } = await pollTranscript(transcriptId);
     transcribeButton.disabled = false;
     translateButton.disabled = false;
     transcribeButton.removeAttribute("data-loading");
@@ -38,16 +44,20 @@ async function handleTranscribeEvent() {
       message: "Transcription completed!",
       status: "success",
     });
-    const fileId = await uploadToGoogleDrive({
+    const hindiSubtitleFilename = filenameToSubtitleFilename({
+      filename: transcribeButton.getAttribute("data-file-name"),
+      language_code: "hi",
+    });
+    const subtitleFileId = await uploadToGoogleDrive({
       data: srt,
-      filename: "subtitles.hi.srt",
+      filename: hindiSubtitleFilename,
     });
     makeToast({
       message: "Subtitles (Hindi) generated and uploaded to Google Drive!",
       status: "success",
-      duration: 5000,
-      linkHref: fileIdToGoogleDriveLink(fileId),
+      linkHref: fileIdToGoogleDriveLink(subtitleFileId),
       linkMessage: "View on Google Drive",
+      isCloseable: true,
     });
   } catch (error) {
     transcribeButton.disabled = false;
@@ -84,16 +94,22 @@ async function handleTranslateEvent() {
       message: "Translation completed!",
       status: "success",
     });
-    const fileId = await uploadToGoogleDrive({
+
+    const englishSubtitleFilename = filenameToSubtitleFilename({
+      filename: transcribeButton.getAttribute("data-file-name"),
+      language_code: "en",
+    });
+
+    const subtitleFileId = await uploadToGoogleDrive({
       data: srt,
-      filename: "subtitles.en.srt",
+      filename: englishSubtitleFilename,
     });
     makeToast({
       message: "Subtitles (English) generated and uploaded to Google Drive!",
       status: "success",
-      duration: 5000,
-      linkHref: fileIdToGoogleDriveLink(fileId),
+      linkHref: fileIdToGoogleDriveLink(subtitleFileId),
       linkMessage: "View on Google Drive",
+      isCloseable: true,
     });
   } catch (error) {
     transcribeButton.disabled = false;

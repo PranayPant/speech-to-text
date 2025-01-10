@@ -48,3 +48,20 @@ export async function uploadToGoogleDrive({ data, filename }) {
   }
   return { fileId: response?.data?.id };
 }
+
+export async function getFileInfo({ fileId }) {
+  let response;
+  try {
+    response = await drive.files.get({
+      fileId,
+      fields: "name,webViewLink",
+    });
+  } catch (error) {
+    console.error("Error getting file info from Google Drive:", error);
+    throw error;
+  }
+  return {
+    name: response?.data?.name,
+    webViewLink: response?.data?.webViewLink,
+  };
+}

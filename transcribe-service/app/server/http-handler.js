@@ -2,7 +2,7 @@ import { uploadExtractedAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
 import { postTranscription } from "../api/assemblyai.js";
-import { uploadToGoogleDrive } from "../api/google-drive.js";
+import { getFileInfo, uploadToGoogleDrive } from "../api/google-drive.js";
 
 export function httpHandler(req, res) {
   if (req.method !== "POST") {
@@ -12,6 +12,27 @@ export function httpHandler(req, res) {
   }
 
   switch (req.url) {
+    case "/drive/get/file": {
+      let jsonString = "";
+      req.on("data", (chunk) => {
+        jsonString += chunk;
+      });
+      req.on("end", async () => {
+        const parsedData = JSON.parse(jsonString);
+        const { fileId } = parsedData;
+        try {
+          const response = await getFileInfo({ fileId });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(response));
+        } catch (error) {
+          console.error("Error fetching file info from google drive:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      break;
+    }
+
     case "/drive/upload/text": {
       let jsonString = "";
       req.on("data", (chunk) => {

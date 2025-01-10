@@ -18,3 +18,9 @@ export function processGoogleDriveLink(link) {
 export function fileIdToGoogleDriveLink(fileId) {
   return `https://drive.google.com/file/d/${fileId}/`;
 }
+
+export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {
+  const nameWithoutExtension =
+    filename?.substring(0, filename?.lastIndexOf(".")) || "subtitles";
+  return `${nameWithoutExtension}.${language_code}.srt`;
+}
