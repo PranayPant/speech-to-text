@@ -1,7 +1,7 @@
 name: "Start Bunnyshell Environment"
 on:
   schedule:
-    - cron: "*/35 * * * *"
+    - cron: "*/45 * * * *"
 
 jobs:
   keep_dev_warm:
