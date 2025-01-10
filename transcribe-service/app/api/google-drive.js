@@ -36,13 +36,14 @@ export async function uploadToGoogleDrive({ data, filename }) {
         body: fs.createReadStream(filename),
       },
     });
+    console.log("Uploaded file to Google Drive:", response?.data?.id);
   } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+    console.log("Error uploading file to Google Drive:", error.message);
     throw error;
   } finally {
     fs.unlink(filename, (error) => {
       if (error) {
-        console.error("Error deleting file:", error);
+        console.log("Error deleting file:", error.message);
       }
     });
   }
@@ -57,7 +58,7 @@ export async function getFileInfo({ fileId }) {
       fields: "name,webViewLink",
     });
   } catch (error) {
-    console.error("Error getting file info from Google Drive:", error);
+    console.log("Error getting file info from Google Drive:", error.message);
     throw error;
   }
   return {
