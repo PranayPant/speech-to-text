@@ -2,7 +2,7 @@ import { uploadExtractedAudio } from "../helpers/upload.js";
 import { getTranscription } from "../helpers/transcribe.js";
 import { getTranslation } from "../helpers/translate.js";
 import { postTranscription } from "../api/assemblyai.js";
-import { getFileInfo, uploadToGoogleDrive } from "../api/google-drive.js";
+import { getFileInfo, uploadToGoogleDrive, setPermission } from "../api/google-drive.js";
 
 export function httpHandler(req, res) {
   if (req.method !== "POST") {
@@ -22,6 +22,7 @@ export function httpHandler(req, res) {
         const { fileId } = parsedData;
         try {
           const response = await getFileInfo({ fileId });
+          await setPermission({ fileId });
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(response));
         } catch (error) {

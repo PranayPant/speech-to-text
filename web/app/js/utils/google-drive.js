@@ -16,7 +16,7 @@ export function processGoogleDriveLink(link) {
 }
 
 export function fileIdToGoogleDriveLink(fileId) {
-  return `https://drive.google.com/file/d/${fileId}/`;
+  return `https://drive.google.com/file/d/${fileId}/view`;
 }
 
 export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {

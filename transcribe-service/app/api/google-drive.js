@@ -65,3 +65,17 @@ export async function getFileInfo({ fileId }) {
     webViewLink: response?.data?.webViewLink,
   };
 }
+
+export async function setPermission({ fileId }) {
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+  } catch (error) {
+    console.log("Failed to set permission on file", fileId, error.message);
+  }
+}

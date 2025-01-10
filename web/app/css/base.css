@@ -18,7 +18,10 @@ body main {
 }
 
 .toast-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  padding: 16px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
