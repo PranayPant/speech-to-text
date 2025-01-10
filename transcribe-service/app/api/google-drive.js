@@ -77,6 +77,6 @@ export async function setPermission({ fileId }) {
       },
     });
   } catch (error) {
-    console.log("Failed to set permission on file", fileId, error.message);
+    console.log("Failed to set permission on file:", fileId, error.message);
   }
 }
