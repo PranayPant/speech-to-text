@@ -43,6 +43,7 @@ export function httpHandler(req, res) {
         const { data, filename } = parsedData;
         try {
           const response = await uploadToGoogleDrive({ data, filename });
+          await setPermission({ fileId: response.fileId });
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(response));
         } catch (error) {
