@@ -1,4 +1,11 @@
 services:
+  translate:
+    build: ./translate
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TRANSLATE_PORT=8001
+    ports:
+      - 8001:8001
   transcribe:
     build: ./transcribe-service
     environment:
