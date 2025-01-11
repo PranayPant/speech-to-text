@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.main import get_transcription
+from translate.src.api.transcribe import get_transcription
 
 app = FastAPI()
 router = APIRouter(redirect_slashes=False)
