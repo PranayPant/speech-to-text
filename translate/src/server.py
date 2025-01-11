@@ -9,12 +9,12 @@ router = APIRouter(redirect_slashes=False)
 
 # Add your routes to the router
 @router.get("/api/v1/translate")
-def write_subs(ai_model: str, transcript_id: str, include_transcript: bool, include_srt: bool, include_sentences: bool):
+async def translate(transcript_id: str, ai_model: str = None, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
     """
     Take a transcript ID and return the transcript, sentences, and SRT file.
     """
-    transcript_details = get_transcription(transcript_id, include_transcript, include_sentences, include_srt)
-    return Response(content=transcript_details, media_type="application/json")
+    transcript_details = await get_transcription(transcript_id, include_transcript, include_sentences, include_srt)
+    return transcript_details
 
 app.add_middleware(
     CORSMiddleware,

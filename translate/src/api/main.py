@@ -1,39 +1,84 @@
+"""
+This module provides functions to fetch and process transcriptions from AssemblyAI.
+"""
+
+import os
 import asyncio
 import aiohttp
-import os
 
 async def fetch_assembly_ai_transcript(transcript_id, resource=""):
-  url = f"https://api.assemblyai.com/v2/transcript/{transcript_id}{resource}"
-  headers = {
-    "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
-  }
-  async with aiohttp.ClientSession() as session:
-    async with session.get(url, headers=headers) as response:
-      return await response.json()
+    """
+    Fetches the transcript from AssemblyAI.
+
+    Args:
+        transcript_id (str): The ID of the transcript.
+        resource (str): The resource to fetch (default is "").
+
+    Returns:
+        dict: The JSON response from the API.
+    """
+    url = f"https://api.assemblyai.com/v2/transcript/{transcript_id}{resource}"
+    headers = {
+        "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if resource == "/srt":
+                return await response.text()
+            return await response.json()
 
 async def get_transcription(transcript_id, include_transcript, include_sentences, include_srt):
-  tasks = []
-  if include_transcript:
-    tasks.append(fetch_assembly_ai_transcript(transcript_id))
-  if include_sentences:
-    tasks.append(fetch_assembly_ai_transcript(transcript_id, resource="/sentences"))
-  if include_srt:
-    tasks.append(fetch_assembly_ai_transcript(transcript_id, resource="/srt"))
+    """
+    Gets the transcription, sentences, and SRT from AssemblyAI.
 
-  results = await asyncio.gather(*tasks)
-  transcript_response = results[0] if include_transcript else None
-  sentences_response = results[1] if include_sentences else None
-  srt_response = results[2] if include_srt else None
+    Args:
+        transcript_id (str): The ID of the transcript.
+        include_transcript (bool): Whether to include the transcript.
+        include_sentences (bool): Whether to include the sentences.
+        include_srt (bool): Whether to include the SRT.
 
-  if transcript_response and transcript_response.get("status") == "error":
-    raise Exception("Transcription failed")
+    Returns:
+        dict: A dictionary containing the status, transcript, sentences, and SRT.
+    """
+    tasks = []
+    srt_response_index = 0
+    transcript_response_index = 0
+    sentences_response_index = 0
 
-  return {
-    "status": transcript_response.get("status") if transcript_response else None,
-    "transcript": transcript_response.get("text") if transcript_response else None,
-    "sentences": [
-      {"text": sentence["text"], "start": sentence["start"], "end": sentence["end"]}
-      for sentence in sentences_response.get("sentences", [])
-    ] if sentences_response else None,
-    "srt": srt_response if srt_response else None,
-  }
+    if include_transcript:
+        tasks.append(fetch_assembly_ai_transcript(transcript_id))
+        srt_response_index += 1
+        sentences_response_index += 1
+    if include_sentences:
+        tasks.append(fetch_assembly_ai_transcript(transcript_id, resource="/sentences"))
+        srt_response_index += 1
+    if include_srt:
+        tasks.append(fetch_assembly_ai_transcript(transcript_id, resource="/srt"))
+          
+    results = await asyncio.gather(*tasks)
+    transcript_response = results[transcript_response_index] if include_transcript else None
+    sentences_response = results[sentences_response_index] if include_sentences else None
+    srt_response = results[srt_response_index] if include_srt else None
+
+    if transcript_response and transcript_response.get("status") == "error":
+        raise ValueError("Transcription failed")
+
+    return {
+        "status": transcript_response.get("status") if transcript_response else None,
+        "transcript": transcript_response.get("text") if transcript_response else None,
+        "sentences": [
+            {"text": sentence["text"], "start": sentence["start"], "end": sentence["end"]}
+            for sentence in sentences_response.get("sentences", [])
+        ] if sentences_response else None,
+        "srt": srt_response if srt_response else None,
+    }
+
+    # return {
+    #     "status": "success",
+    #     "transcript": "Hello, world!",
+    #     "sentences": [
+    #         {"text": "Hello, world!", "start": 0.0, "end": 1.0},
+    #         {"text": "Hello, world!", "start": 1.0, "end": 2.0},
+    #     ],
+    #     "srt": "1\n00:00:00,000 --> 00:00:01,000\nHello, world!\n\n2\n00:00:01,000 --> 00:00:02,000\nHello, world",
+    # }

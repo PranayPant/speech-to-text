@@ -2,6 +2,7 @@ services:
   translate:
     build: ./translate
     environment:
+      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TRANSLATE_PORT=8001
     ports:
