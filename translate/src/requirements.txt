@@ -1,3 +1,4 @@
 fastapi[standard]
-openai
+openai==1.59.7
 aiohttp
+aiologger

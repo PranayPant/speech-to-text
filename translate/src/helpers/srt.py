@@ -12,7 +12,7 @@ def split_sentences(sentences: List[Dict[str, int]], max_length: int = 80) -> Li
   new_sentences = []
 
   for sentence in sentences:
-    text, start, end = sentence['text'], sentence['start'], sentence['end']
+    text, start, end = sentence.get('text'), sentence.get('start'), sentence.get('end')
 
     # If the sentence is within the max length, keep it as is
     if len(text) <= max_length:

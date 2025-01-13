@@ -5,6 +5,7 @@ This module provides functions to fetch and process transcriptions from Assembly
 import os
 import asyncio
 import aiohttp
+import logging
 
 async def fetch_assembly_ai_transcript(transcript_id, resource=""):
     """
@@ -24,8 +25,10 @@ async def fetch_assembly_ai_transcript(transcript_id, resource=""):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             if resource == "/srt":
-                return await response.text()
-            return await response.json()
+                result = await response.text()
+            else:
+                result = await response.json()
+    return result
 
 async def get_transcription(transcript_id, include_transcript, include_sentences, include_srt):
     """
@@ -72,13 +75,3 @@ async def get_transcription(transcript_id, include_transcript, include_sentences
         ] if sentences_response else None,
         "srt": srt_response if srt_response else None,
     }
-
-    # return {
-    #     "status": "success",
-    #     "transcript": "Hello, world!",
-    #     "sentences": [
-    #         {"text": "Hello, world!", "start": 0.0, "end": 1.0},
-    #         {"text": "Hello, world!", "start": 1.0, "end": 2.0},
-    #     ],
-    #     "srt": "1\n00:00:00,000 --> 00:00:01,000\nHello, world!\n\n2\n00:00:01,000 --> 00:00:02,000\nHello, world",
-    # }
