@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.transcribe import get_transcription
 from .api.translation import get_translation
+from .api.google_drive import upload_to_google_drive, FileUploadRequest
 
 app = FastAPI()
 router = APIRouter(redirect_slashes=False)
@@ -24,6 +25,14 @@ async def translate(transcript_id: str, ai_model: str = None, include_transcript
     """
     translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt)
     return translation_details
+
+@router.post("/api/v1/drive/upload")
+async def upload(request_body: FileUploadRequest):
+    """
+    Take a transcript ID and return the translated transcript, sentences, and SRT file.
+    """
+    upload_response = upload_to_google_drive(params=request_body)
+    return upload_response
 
 app.add_middleware(
     CORSMiddleware,
