@@ -54,7 +54,7 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
 
   return {'file_id': file.get('id')}
 
-async def get_file_info(file_id: str) -> dict:
+def get_file_info(file_id: str) -> dict:
   try:
     file = drive_service.files().get(
       fileId=file_id,

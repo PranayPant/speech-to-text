@@ -5,7 +5,37 @@ This module provides functions to fetch and process transcriptions from Assembly
 import os
 import asyncio
 import aiohttp
-import logging
+from pydantic import BaseModel
+
+class PostTranscriptRequest(BaseModel):
+    """
+    The parameters for the transcription request.
+    """
+    audio_url: str
+
+
+async def create_transcript(params: PostTranscriptRequest) -> str:
+    """
+    Posts the transcription request to AssemblyAI.
+
+    Args:
+        params (PostTranscriptRequest): The parameters for the transcription request.
+
+    Returns:
+        str: The ID of the transcription.
+    """
+    url = "https://api.assemblyai.com/v2/transcript"
+    headers = {
+        "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
+        "content-type": "application/json",
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"language_code": "hi", **vars(params), }, headers=headers) as response:
+            if response.status != 200:
+                error_message = await response.text()
+                raise Exception(f"Error transcribing audio: {error_message}")
+            result = await response.json()
+    return result["id"]
 
 async def fetch_assembly_ai_transcript(transcript_id, resource=""):
     """

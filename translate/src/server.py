@@ -1,13 +1,20 @@
 from fastapi import FastAPI, APIRouter, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.transcribe import get_transcription
+from .api.transcribe import get_transcription, create_transcript, PostTranscriptRequest
 from .api.translation import get_translation
-from .api.google_drive import upload_to_google_drive, FileUploadRequest
+from .api.google_drive import upload_to_google_drive, get_file_info, FileUploadRequest
 
 app = FastAPI()
 router = APIRouter(redirect_slashes=False)
 
+@router.post("/api/v1/transcript")
+async def transcript(request_body: PostTranscriptRequest):
+    """
+    Post a new transcript and return the transcript ID.
+    """
+    transcript_id = await create_transcript(params=request_body)
+    return {"transcript_id": transcript_id}
 
 # Add your routes to the router
 @router.get("/api/v1/transcribe")
@@ -29,10 +36,18 @@ async def translate(transcript_id: str, ai_model: str = None, include_transcript
 @router.post("/api/v1/drive/upload")
 async def upload(request_body: FileUploadRequest):
     """
-    Take a transcript ID and return the translated transcript, sentences, and SRT file.
+    Create a text file on google drive with given requets body.
     """
     upload_response = upload_to_google_drive(params=request_body)
     return upload_response
+
+@router.get("/api/v1/drive/info")
+async def upload(file_id: str):
+    """
+    Get file info of file with given file_id.
+    """
+    info_response = get_file_info(file_id=file_id)
+    return info_response
 
 app.add_middleware(
     CORSMiddleware,
