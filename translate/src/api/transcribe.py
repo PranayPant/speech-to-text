@@ -37,7 +37,7 @@ async def create_transcript(params: PostTranscriptRequest) -> str:
             result = await response.json()
     return result["id"]
 
-async def fetch_assembly_ai_transcript(transcript_id, resource=""):
+async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -> dict:
     """
     Fetches the transcript from AssemblyAI.
 
@@ -60,7 +60,7 @@ async def fetch_assembly_ai_transcript(transcript_id, resource=""):
                 result = await response.json()
     return result
 
-async def get_transcription(transcript_id, include_transcript, include_sentences, include_srt):
+async def get_transcription(transcript_id: str, include_transcript: bool, include_sentences: bool, include_srt: bool) -> dict:  
     """
     Gets the transcription, sentences, and SRT from AssemblyAI.
 

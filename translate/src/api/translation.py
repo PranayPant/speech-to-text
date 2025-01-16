@@ -10,11 +10,10 @@ from ..helpers.srt import generate_srt
 client = AsyncOpenAI()
 logger = Logger.with_default_handlers(level=logging.INFO)
 
-async def translate_sentences(params):
+async def translate_sentences(transcript_id: str, ai_model: str):
   start_time = time.time()
   try:
-    transcript_id, model = params['transcript_id'], params['model']
-    await logger.info(f"Translating sentences... {transcript_id}")
+    await logger.info(f"Translating using model {ai_model}... {transcript_id}")
 
     transcription = await get_transcription(
       transcript_id=transcript_id,
@@ -24,21 +23,28 @@ async def translate_sentences(params):
     )
 
     sentences = transcription['sentences']
-    
+    stringified_sentences = str(sentences)
+    await logger.info(f"Translating sentences...")  
+
     translation_response = await client.chat.completions.create(
-      model=model,
+      model=ai_model,
       messages=[
         {
-          "role": "system",
-          "content": "You are given a stringified JSON array that represents a timestamped Hindi transcript that contains quotations in Sanskrit. Translate the text into English, skipping any quotations in Sanskrit, and return the modified array with original timestamps. Only include the array in the response so that it can be easily parsed by the client.",
+          "role": "developer",
+          "content": "Given an array that represents a timestamped Hindi transcript, return a modified array with the text translated to English. Return the modified array as json object under the field result.",
         },
-        {"role": "user", "content": str(sentences)},
+        {"role": "user", "content": stringified_sentences},
       ],
+      response_format={"type": "json_object"}
     )
 
-    translated_sentences = translation_response.choices[0].message.content.strip()
+    translated_sentences_str = translation_response.choices[0].message.content.strip()
 
-    return {'transcript_id': transcript_id, 'sentences': json.loads(translated_sentences)}
+    await logger.info(f"Translated sentences: {translated_sentences_str}")
+
+    translated_sentences = json.loads(translated_sentences_str).get('result')
+
+    return {'transcript_id': transcript_id, 'sentences': translated_sentences}
   except Exception as error:
     await logger.error(f"Error translating transcript: {error}")
     raise Exception(f"Error translating transcript: {error}")
@@ -46,10 +52,9 @@ async def translate_sentences(params):
     end_time = time.time()
     await logger.info(f"translate_sentences took {end_time - start_time:.2f} seconds")
 
-async def translate_transcript(params):
+async def translate_transcript(transcript_id: str, ai_model: str):
   start_time = time.time()
   try:
-    transcript_id, model = params['transcript_id'], params['model']
     await logger.info(f"Translating transcript... {transcript_id}")
     transcription = await get_transcription(
       transcript_id=transcript_id,
@@ -60,10 +65,10 @@ async def translate_transcript(params):
     transcript = transcription['transcript']
     
     translation_response = await client.chat.completions.create(
-      model=model,
+      model=ai_model,
       messages=[
         {
-          "role": "system",
+          "role": "developer",
           "content": "Translate the given Hindi transcript into English, skipping any quotations in Sanskrit.",
         },
         {"role": "user", "content": transcript},
@@ -79,7 +84,11 @@ async def translate_transcript(params):
     end_time = time.time()
     await logger.info(f"translate_transcript took {end_time - start_time:.2f} seconds")
 
-async def get_translation(include_srt, include_transcript, include_sentences, transcript_id, model="gpt-4o"):
+async def get_translation(include_srt: bool, 
+                          include_transcript: bool, 
+                          include_sentences: bool, 
+                          transcript_id: str, 
+                          ai_model: str):
   start_time = time.time()
   try:
     import asyncio
@@ -89,10 +98,10 @@ async def get_translation(include_srt, include_transcript, include_sentences, tr
     sentences_response_index = 0
 
     if(include_transcript):
-      tasks.append(translate_transcript({'transcript_id': transcript_id, 'model': model}))
+      tasks.append(translate_transcript(transcript_id=transcript_id, ai_model=ai_model))
       sentences_response_index += 1
     if(include_sentences or include_srt):
-      tasks.append(translate_sentences({'transcript_id': transcript_id, 'model': model}))
+      tasks.append(translate_sentences(transcript_id=transcript_id, ai_model=ai_model))
     
     results = await asyncio.gather(*tasks)
 

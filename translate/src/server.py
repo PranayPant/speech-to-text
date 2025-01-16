@@ -8,32 +8,31 @@ from .api.google_drive import upload_to_google_drive, get_file_info, FileUploadR
 app = FastAPI()
 router = APIRouter(redirect_slashes=False)
 
-@router.post("/api/v1/transcript")
-async def transcript(request_body: PostTranscriptRequest):
+@router.post("/transcribe")
+async def transcribe(request_body: PostTranscriptRequest):
     """
     Post a new transcript and return the transcript ID.
     """
     transcript_id = await create_transcript(params=request_body)
     return {"transcript_id": transcript_id}
 
-# Add your routes to the router
-@router.get("/api/v1/transcribe")
-async def transcribe(transcript_id: str, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
+@router.get("/transcript")
+async def transcript(transcript_id: str, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
     """
     Take a transcript ID and return the transcript, sentences, and SRT file.
     """
     transcript_details = await get_transcription(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt)
     return transcript_details
 
-@router.get("/api/v1/translate")
-async def translate(transcript_id: str, ai_model: str = None, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
+@router.get("/translate")
+async def translate(transcript_id: str, ai_model: str | None = 'gpt-4o', include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
     """
     Take a transcript ID and return the translated transcript, sentences, and SRT file.
     """
-    translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt)
+    translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt, ai_model=ai_model)
     return translation_details
 
-@router.post("/api/v1/drive/upload")
+@router.post("/drive/upload")
 async def upload(request_body: FileUploadRequest):
     """
     Create a text file on google drive with given requets body.
@@ -41,7 +40,7 @@ async def upload(request_body: FileUploadRequest):
     upload_response = upload_to_google_drive(params=request_body)
     return upload_response
 
-@router.get("/api/v1/drive/info")
+@router.get("/drive/info")
 async def upload(file_id: str):
     """
     Get file info of file with given file_id.
