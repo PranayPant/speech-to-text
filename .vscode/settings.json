@@ -7,6 +7,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
   },
-
-  "python.analysis.extraPaths": ["translate/venv/Lib/site-packages"]
+  "python.analysis.extraPaths": ["translate/venv/Lib/site-packages"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  }
 }

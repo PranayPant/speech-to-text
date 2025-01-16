@@ -7,6 +7,8 @@ import asyncio
 import aiohttp
 from pydantic import BaseModel
 
+from ..types.main import TranscriptRecord
+
 class PostTranscriptRequest(BaseModel):
     """
     The parameters for the transcription request.
@@ -60,7 +62,7 @@ async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -
                 result = await response.json()
     return result
 
-async def get_transcription(transcript_id: str, include_transcript: bool, include_sentences: bool, include_srt: bool) -> dict:  
+async def get_transcription(transcript_id: str, include_transcript: bool, include_sentences: bool, include_srt: bool) -> TranscriptRecord:  
     """
     Gets the transcription, sentences, and SRT from AssemblyAI.
 
@@ -96,12 +98,13 @@ async def get_transcription(transcript_id: str, include_transcript: bool, includ
     if transcript_response and transcript_response.get("status") == "error":
         raise ValueError("Transcription failed")
 
-    return {
-        "status": transcript_response.get("status") if transcript_response else None,
-        "transcript": transcript_response.get("text") if transcript_response else None,
-        "sentences": [
+    transcript_record = TranscriptRecord(
+        status=transcript_response.get("status") if transcript_response else None,
+        transcript=transcript_response.get("text") if transcript_response else None,
+        sentences=[
             {"text": sentence["text"], "start": sentence["start"], "end": sentence["end"]}
             for sentence in sentences_response.get("sentences", [])
         ] if sentences_response else None,
-        "srt": srt_response if srt_response else None,
-    }
+        srt=srt_response if srt_response else None,
+    )
+    return transcript_record

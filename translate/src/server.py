@@ -1,6 +1,10 @@
 from fastapi import FastAPI, APIRouter, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+from .models.translator.ai_model import get_translator
+
+from .types.main import AIModelName
+
 from .api.transcribe import get_transcription, create_transcript, PostTranscriptRequest
 from .api.translation import get_translation
 from .api.google_drive import upload_to_google_drive, get_file_info, FileUploadRequest
@@ -25,12 +29,14 @@ async def transcript(transcript_id: str, include_transcript: bool = False, inclu
     return transcript_details
 
 @router.get("/translate")
-async def translate(transcript_id: str, ai_model: str | None = 'gpt-4o', include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
+async def translate(transcript_id: str, ai_model: AIModelName | None, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
     """
     Take a transcript ID and return the translated transcript, sentences, and SRT file.
     """
-    translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt, ai_model=ai_model)
-    return translation_details
+    # translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt, ai_model=ai_model)
+    # return translation_details
+    translator = get_translator(ai_model)
+    translation_details = translator.translate_sentences(transcript_id)
 
 @router.post("/drive/upload")
 async def upload(request_body: FileUploadRequest):
