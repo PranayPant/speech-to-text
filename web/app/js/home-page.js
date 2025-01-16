@@ -1,7 +1,7 @@
 import {
   getFileInfo,
+  getTranslationDetails,
   initiateTranscription,
-  postTranslation,
   uploadToGoogleDrive,
 } from "./http/api.js";
 import {
@@ -85,7 +85,10 @@ async function handleTranslateEvent() {
     translateButton.disabled = true;
     translateButton.setAttribute("data-loading", true);
     translateButton.textContent = "Translating...";
-    const { srt } = await postTranslation({ transcriptId, includeSRT: true });
+    const { srt } = await getTranslationDetails({
+      transcriptId,
+      includeSRT: true,
+    });
     translateButton.disabled = false;
     transcribeButton.disabled = false;
     translateButton.removeAttribute("data-loading");

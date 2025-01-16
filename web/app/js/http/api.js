@@ -18,23 +18,31 @@ export async function uploadBinaryData(binaryData, mimeType) {
 }
 
 export async function initiateTranscription(uploadUrl) {
-  const response = await fetch("/api/transcribe", {
+  const response = await fetch("/api/v1/transcribe", {
     method: "POST",
-    body: JSON.stringify({ uploadUrl }),
+    body: JSON.stringify({ audio_url: uploadUrl }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
   if (!response.ok) {
     throw new Error(`Transcription initiation failed: ${response.statusText}`);
   }
 
-  const { transcriptId } = await response.json();
-  return transcriptId;
+  const { transcript_id } = await response.json();
+  return transcript_id;
 }
 
 export async function getTranscriptDetails(params) {
-  const response = await fetch("/api/transcript", {
-    method: "POST",
-    body: JSON.stringify(params),
+  const searchParams = new URLSearchParams({
+    transcript_id: params.transcriptId,
+    include_srt: !!params.includeSRT,
+    include_sentences: !!params.includeSentences,
+    include_transcript: !!params.includeTranscript,
+  });
+  const response = await fetch(`/api/v1/transcript?${searchParams}`, {
+    method: "GET",
   });
 
   if (!response.ok) {
@@ -47,10 +55,15 @@ export async function getTranscriptDetails(params) {
   return transcriptDetails;
 }
 
-export async function postTranslation(params) {
-  const response = await fetch("/api/translate", {
-    method: "POST",
-    body: JSON.stringify(params),
+export async function getTranslationDetails(params) {
+  const searchParams = new URLSearchParams({
+    transcript_id: params.transcriptId,
+    include_srt: !!params.includeSRT,
+    include_sentences: !!params.includeSentences,
+    include_transcript: !!params.includeTranscript,
+  });
+  const response = await fetch(`/api/v1/translate?${searchParams}`, {
+    method: "GET",
   });
 
   if (!response.ok) {
@@ -63,9 +76,9 @@ export async function postTranslation(params) {
 
 export async function uploadToGoogleDrive({ data, filename }) {
   console.log("Uploading text file to Google Drive...", filename);
-  const response = await fetch("/api/drive/upload/text", {
+  const response = await fetch("/api/v1/drive/upload", {
     method: "POST",
-    body: JSON.stringify({ data, filename }),
+    body: JSON.stringify({ text: data, file_name: filename }),
     headers: {
       "Content-Type": "application/json",
     },
@@ -75,18 +88,15 @@ export async function uploadToGoogleDrive({ data, filename }) {
     throw new Error(`Upload failed: ${response.statusText}`);
   }
 
-  const { fileId } = await response.json();
-  return fileId;
+  const { file_id } = await response.json();
+  return file_id;
 }
 
 export async function getFileInfo({ fileId }) {
   console.log("Fetching file info from Google Drive...", fileId);
-  const response = await fetch("/api/drive/get/file", {
-    method: "POST",
-    body: JSON.stringify({ fileId }),
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const params = new URLSearchParams({ file_id: fileId });
+  const response = await fetch(`/api/v1/drive/info?${params}`, {
+    method: "GET",
   });
 
   if (!response.ok) {
