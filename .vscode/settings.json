@@ -14,5 +14,6 @@
     "editor.defaultFormatter": "ms-python.autopep8"
   },
   "python.analysis.extraPaths": ["translate/venv/Lib/site-packages"],
+  // "python.analysis.typeCheckingMode": "strict",
   "autopep8.args": ["--config", "pyproject.toml"]
 }

@@ -1,8 +1,8 @@
+from dataclasses import dataclass
 import google.generativeai as genai
 import json
 
-from ...types import AIModelName, SubtitleRecord, TranscriptRecord, TranslationQuery
-from ...api.transcribe import get_transcription
+from ...types import AIModelName, SubtitleRecord
 
 from .base_model import AIModel
 
@@ -10,30 +10,45 @@ class GeminiAI(AIModel):
     def __init__(self):
         self.name = AIModelName.GEMINI_2.value
 
-    async def translate(self, params: TranslationQuery) -> TranscriptRecord:
-        transcript_record = await get_transcription(transcript_id=params.transcript_id, include_sentences=True, include_transcript=False, include_srt=False)
-        sentences = transcript_record.sentences
-        translated_sentences = self.translate_sentences(sentences)
-        transcript_record.sentences = translated_sentences
-        return transcript_record
-
     def translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
+        
+        hindi_sentences = [sentence.text for sentence in sentences]
 
         model = genai.GenerativeModel(self.name)
         prompt = """
-            You are given a timestamped Hindi transcript in the form of an array representing sentences.
-            Translate the Hindi transcript to English, ignoring any Sanskrit quotations.
+            You are given a stringified array of sentences from a Hindi transcript, mixed with some quotations in Sanskrit.
+            Translate the text from Hindi to English, ignoring any quotations in Sanskrit, and return the modified array.
 
             Use this as input:
-            sentences = """ + str(sentences) + """
+            sentences = """ + str(hindi_sentences) + """
             """
-        result = model.generate_content(
-            prompt, 
+        response = model.generate_content(
+            contents=prompt, 
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json", 
-                response_schema=list[SubtitleRecord]
+                response_schema=list[str]
             )
         )
-        result = json.loads(result.text)
+        translated_texts = json.loads(response.text)
+        result = [SubtitleRecord(
+            **sentence.model_dump(include={'start', 'end'}), 
+            text=translated_text, 
+            length=len(translated_text)) for sentence, translated_text in zip(sentences, translated_texts)
+        ]
 
         return result
+    
+    def translate_transcript(self, transcript: str) -> str:
+
+        model = genai.GenerativeModel(self.name)
+        prompt = """
+            You are given a Hindi transcript.
+            Translate the Hindi transcript to English, ignoring any Sanskrit quotations.
+            Return only the translated transcript in the response.
+
+            Use this as input:
+            sentences = """ + transcript + """
+            """
+        result = model.generate_content(prompt)
+
+        return result.text

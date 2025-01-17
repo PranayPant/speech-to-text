@@ -10,5 +10,5 @@ def get_translator(ai_model: AIModelName | None) -> AIModel:
     case 'gemini-2.0-flash-exp':
       return GeminiAI()
     case _:
-      print('No model found, using default model {AIModelName.GEMINI_2}')
+      print(f'No model found, using default model {AIModelName.GEMINI_2.value}')
       return GeminiAI()
