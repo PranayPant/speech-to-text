@@ -13,9 +13,6 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8"
   },
-  "python.analysis.extraPaths": [
-    "translate/venv/Lib/site-packages",
-    "translate/venv/lib/python13.3/site-packages"
-  ],
+  "python.analysis.extraPaths": ["translate/venv/Lib/site-packages"],
   "autopep8.args": ["--config", "pyproject.toml"]
 }

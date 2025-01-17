@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 from pydantic import BaseModel
 
-from ..types.main import TranscriptRecord
+from ..types import TranscriptRecord
 
 class PostTranscriptRequest(BaseModel):
     """

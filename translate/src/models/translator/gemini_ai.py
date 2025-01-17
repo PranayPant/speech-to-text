@@ -1,16 +1,17 @@
 import google.generativeai as genai
+import json
 
-from .base_model import AIModel
-from ...types.main import AIModelName, SubtitleRecord, TranscriptRecord
+from ...types import AIModelName, SubtitleRecord, TranscriptRecord, TranslationQuery
 from ...api.transcribe import get_transcription
 
+from .base_model import AIModel
 
 class GeminiAI(AIModel):
     def __init__(self):
-        self.name = AIModelName.GEMINI_2
+        self.name = AIModelName.GEMINI_2.value
 
-    async def translate(self, transcript_id: str, include_sentences: bool, include_transcript: bool, include_srt: bool) -> TranscriptRecord:
-        transcript_record = await get_transcription(transcript_id=transcript_id, include_sentences=True, include_transcript=False, include_srt=False)
+    async def translate(self, params: TranslationQuery) -> TranscriptRecord:
+        transcript_record = await get_transcription(transcript_id=params.transcript_id, include_sentences=True, include_transcript=False, include_srt=False)
         sentences = transcript_record.sentences
         translated_sentences = self.translate_sentences(sentences)
         transcript_record.sentences = translated_sentences
@@ -20,14 +21,19 @@ class GeminiAI(AIModel):
 
         model = genai.GenerativeModel(self.name)
         prompt = """
-            You are given a timestamped Hindi transcript in the form of an array.
+            You are given a timestamped Hindi transcript in the form of an array representing sentences.
             Translate the Hindi transcript to English, ignoring any Sanskrit quotations.
 
-            Use this JSON schema:
-
-            SubtitleRecord = {'text': str, 'start': int, 'end': int}
-            Return: list[SubtitleRecord]
+            Use this as input:
+            sentences = """ + str(sentences) + """
             """
-        result = model.generate_content(prompt)
-        print(result)
+        result = model.generate_content(
+            prompt, 
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json", 
+                response_schema=list[SubtitleRecord]
+            )
+        )
+        result = json.loads(result.text)
+
         return result

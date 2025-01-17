@@ -1,9 +1,11 @@
-from fastapi import FastAPI, APIRouter, Response
+from fastapi import FastAPI, APIRouter, Query
 from fastapi.middleware.cors import CORSMiddleware
+
+from typing import Annotated
 
 from .models.translator.main import get_translator
 
-from .types.main import AIModelName, TranscriptRecord
+from .types import AIModelName, TranscriptRecord, TranslationQuery, TranscriptQuery
 
 from .api.transcribe import get_transcription, create_transcript, PostTranscriptRequest
 from .api.translation import get_translation
@@ -29,14 +31,14 @@ async def transcript(transcript_id: str, include_transcript: bool = False, inclu
     return transcript_details
 
 @router.get("/translate")
-async def translate(transcript_id: str, ai_model: AIModelName | None, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False) -> TranscriptRecord:
+async def translate(query: Annotated[TranslationQuery, Query()]) -> TranscriptRecord:
     """
     Take a transcript ID and return the translated transcript, sentences, and SRT file.
     """
     # translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt, ai_model=ai_model)
     # return translation_details
-    translator = get_translator(ai_model)
-    transcript_record = translator.translate(transcript_id, include_sentences=include_sentences, include_transcript=include_transcript, include_srt=include_srt)
+    translator = get_translator(ai_model = query.ai_model)
+    transcript_record = await translator.translate(query)
     return transcript_record
 
 @router.post("/drive/upload")

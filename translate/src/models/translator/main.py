@@ -1,7 +1,7 @@
 from .gemini_ai import GeminiAI
 from .base_model import AIModel
 
-from ...types.main import AIModelName
+from ...types import AIModelName
   
 def get_translator(ai_model: AIModelName | None) -> AIModel:
   match ai_model:
