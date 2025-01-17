@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/45 * * * *"
 
 jobs:
   keep_dev_warm:
@@ -13,6 +13,6 @@ jobs:
     uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      env-id: ${{ vars.BUNNYSHELL_ENV_ID }}
+      env-id: ${{ vars.BUNNYSHELL_PYTHON_SERVICE_ENV_ID }}
     secrets:
       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
