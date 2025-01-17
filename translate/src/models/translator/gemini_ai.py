@@ -1,8 +1,8 @@
 import google.generativeai as genai
 
-from ..ai_model import AIModel
-from ....types.main import AIModelName, SubtitleRecord, TranscriptRecord
-from ....api.transcribe import get_transcription
+from .base_model import AIModel
+from ...types.main import AIModelName, SubtitleRecord, TranscriptRecord
+from ...api.transcribe import get_transcription
 
 
 class GeminiAI(AIModel):

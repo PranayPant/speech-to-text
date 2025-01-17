@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models.translator.ai_model import get_translator
+from .models.translator.main import get_translator
 
 from .types.main import AIModelName, TranscriptRecord
 

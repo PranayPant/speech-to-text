@@ -7,12 +7,15 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
   },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
   "python.analysis.extraPaths": [
     "translate/venv/Lib/site-packages",
     "translate/venv/lib/python13.3/site-packages"
   ],
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8"
-  },
   "autopep8.args": ["--config", "pyproject.toml"]
 }

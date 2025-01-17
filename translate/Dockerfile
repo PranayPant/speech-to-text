@@ -1,5 +1,5 @@
-# Use the latest Python Alpine image
-FROM python:3.11-alpine
+# Debian based image to allow for grpcio installation
+FROM python:3.11-slim-buster
 
 # Set the working directory
 WORKDIR /app
