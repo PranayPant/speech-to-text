@@ -1,18 +1,18 @@
-name: "Start Bunnyshell Environment"
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    branches:
-      - main
-  schedule:
-    - cron: "*/30 * * * *"
+# name: "Start Bunnyshell Environment"
+# on:
+#   pull_request:
+#     types: [opened, reopened, synchronize]
+#     branches:
+#       - main
+#   schedule:
+#     - cron: "*/30 * * * *"
 
-jobs:
-  keep_dev_warm:
-    name: Make sure Bunnyshell is running
-    uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
-    with:
-      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      env-id: ${{ vars.BUNNYSHELL_ENV_ID }}
-    secrets:
-      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+# jobs:
+#   keep_dev_warm:
+#     name: Make sure Bunnyshell is running
+#     uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
+#     with:
+#       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+#       env-id: ${{ vars.BUNNYSHELL_ENV_ID }}
+#     secrets:
+#       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
