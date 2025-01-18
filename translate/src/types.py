@@ -2,6 +2,10 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 from enum import Enum
 
+class AIModelName(Enum):
+  OPENAI = 'gpt-4o'
+  GEMINI = 'gemini-2.0-flash-exp'
+
 class SubtitleRecord(BaseModel):
   start: int
   end: int
@@ -14,9 +18,8 @@ class TranscriptRecord(BaseModel):
   srt: Optional[str] = None
   sentences: Optional[list[SubtitleRecord]] = None
 
-class AIModelName(Enum):
-  GTP_4O = 'gpt-4o'
-  GEMINI_2 = 'gemini-2.0-flash-exp'
+class TranslatedTranscriptRecord(TranscriptRecord):
+  ai_model: AIModelName
 
 class TranscriptQuery(BaseModel):
   transcript_id: str

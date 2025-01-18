@@ -39,7 +39,7 @@ async def create_transcript(params: PostTranscriptRequest) -> str:
             result = await response.json()
     return result["id"]
 
-async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -> dict:
+async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -> dict | str:
     """
     Fetches the transcript from AssemblyAI.
 
@@ -52,7 +52,7 @@ async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -
     """
     url = f"https://api.assemblyai.com/v2/transcript/{transcript_id}{resource}"
     headers = {
-        "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
+        "authorization": os.getenv("ASSEMBLYAI_API_KEY") or "",
     }
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import google.generativeai as genai
 import json
 
@@ -6,15 +5,15 @@ from ...types import AIModelName, SubtitleRecord
 
 from .base_model import AIModel
 
-class GeminiAI(AIModel):
-    def __init__(self):
-        self.name = AIModelName.GEMINI_2.value
+class GeminiTranslator(AIModel):
+
+    model_name = AIModelName.GEMINI.value
+    model = genai.GenerativeModel(model_name)
 
     def translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
         
         hindi_sentences = [sentence.text for sentence in sentences]
 
-        model = genai.GenerativeModel(self.name)
         prompt = """
             You are given a stringified array of sentences from a Hindi transcript, mixed with some quotations in Sanskrit.
             Translate the text from Hindi to English, ignoring any quotations in Sanskrit, and return the modified array.
@@ -22,7 +21,7 @@ class GeminiAI(AIModel):
             Use this as input:
             sentences = """ + str(hindi_sentences) + """
             """
-        response = model.generate_content(
+        response = GeminiTranslator.model.generate_content(
             contents=prompt, 
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json", 
@@ -40,7 +39,6 @@ class GeminiAI(AIModel):
     
     def translate_transcript(self, transcript: str) -> str:
 
-        model = genai.GenerativeModel(self.name)
         prompt = """
             You are given a Hindi transcript.
             Translate the Hindi transcript to English, ignoring any Sanskrit quotations.
@@ -49,6 +47,6 @@ class GeminiAI(AIModel):
             Use this as input:
             sentences = """ + transcript + """
             """
-        result = model.generate_content(prompt)
+        result = GeminiTranslator.model.generate_content(prompt)
 
         return result.text

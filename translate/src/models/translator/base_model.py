@@ -5,13 +5,14 @@ from fastapi import HTTPException
 
 from ...api.transcribe import get_transcription
 
-from ...types import TranscriptRecord, TranslationQuery, SubtitleRecord
+from ...types import AIModelName, TranslatedTranscriptRecord, TranslationQuery, SubtitleRecord
 
 class AIModel(ABC):
 
   DEFAULT_SPLIT_LENGTH = 80
+  model_name = AIModelName.GEMINI.value
 
-  def translate(self, params: TranslationQuery) -> TranscriptRecord:
+  def translate(self, params: TranslationQuery) -> TranslatedTranscriptRecord:
     transcript_record = asyncio.run(get_transcription(params.transcript_query()))
 
     if transcript_record.status == "error":
@@ -19,7 +20,7 @@ class AIModel(ABC):
     if transcript_record.status != "completed":
         raise HTTPException(status_code=400, detail="Transcript not available, please try again later.")
     
-    translated_record = TranscriptRecord(status=transcript_record.status)
+    translated_record = TranslatedTranscriptRecord(status=transcript_record.status, ai_model=AIModelName(self.model_name))
     if params.include_sentences and transcript_record.sentences:
         translated_sentences = self.translate_sentences(transcript_record.sentences)
         split_sentences = self.split_long_sentences(translated_sentences, max_length=params.split_sentences_at or AIModel.DEFAULT_SPLIT_LENGTH)
