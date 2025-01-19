@@ -21,6 +21,8 @@ const translateButton = document.querySelector("button#translate");
 translateButton.addEventListener("click", handleTranslateEvent);
 translateButton.disabled = true;
 
+const modelSelect = document.querySelector("select#ai-model");
+
 async function handleTranscribeEvent() {
   try {
     translateButton.disabled = true;
@@ -46,7 +48,7 @@ async function handleTranscribeEvent() {
     });
     const hindiSubtitleFilename = filenameToSubtitleFilename({
       filename: transcribeButton.getAttribute("data-file-name"),
-      language_code: "hi",
+      languageCode: "hi",
     });
     const subtitleFileId = await uploadToGoogleDrive({
       data: srt,
@@ -81,6 +83,7 @@ async function handleTranslateEvent() {
       });
       return;
     }
+    modelSelect.disabled = true;
     transcribeButton.disabled = true;
     translateButton.disabled = true;
     translateButton.setAttribute("data-loading", true);
@@ -88,11 +91,8 @@ async function handleTranslateEvent() {
     const { srt } = await getTranslationDetails({
       transcriptId,
       includeSRT: true,
+      aiModel: modelSelect.value,
     });
-    translateButton.disabled = false;
-    transcribeButton.disabled = false;
-    translateButton.removeAttribute("data-loading");
-    translateButton.textContent = "Translate";
     makeToast({
       message: "Translation completed!",
       status: "success",
@@ -100,7 +100,8 @@ async function handleTranslateEvent() {
 
     const englishSubtitleFilename = filenameToSubtitleFilename({
       filename: transcribeButton.getAttribute("data-file-name"),
-      language_code: "en",
+      languageCode: "en",
+      aiModel: modelSelect.value,
     });
 
     const subtitleFileId = await uploadToGoogleDrive({
@@ -115,13 +116,15 @@ async function handleTranslateEvent() {
       isCloseable: true,
     });
   } catch (error) {
-    transcribeButton.disabled = false;
-    translateButton.disabled = false;
-    translateButton.removeAttribute("data-loading");
-    translateButton.textContent = "Translate";
     makeToast({
       message: `Error: ${error.message}`,
       status: "error",
     });
+  } finally {
+    modelSelect.disabled = false;
+    transcribeButton.disabled = false;
+    translateButton.disabled = false;
+    translateButton.removeAttribute("data-loading");
+    translateButton.textContent = "Translate";
   }
 }

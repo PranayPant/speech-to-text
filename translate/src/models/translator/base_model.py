@@ -15,23 +15,31 @@ class AIModel(ABC):
     self.model_name = ai_model.value
 
   def translate(self, params: TranslationQuery) -> TranslatedTranscriptRecord:
-    transcript_record = asyncio.run(get_transcription(params.transcript_query()))
+    transcript_query = params.transcript_query()
+    # Need to  translate sentences to generate SRT
+    if params.include_srt:
+      transcript_query.include_sentences = True
+    print(transcript_query.model_dump_json())
+    transcript_record = asyncio.run(get_transcription(transcript_query))
 
     if transcript_record.status == "error":
         raise HTTPException(status_code=500, detail="There was an error with the original transcript, translation failed.")
     if transcript_record.status and transcript_record.status != "completed":
         raise HTTPException(status_code=400, detail="Transcript not available, please try again later.")
     
+    split_sentences = None
+    if (params.include_sentences or params.include_srt) and transcript_record.sentences:
+      translated_sentences = self._translate_sentences(transcript_record.sentences)
+      split_sentences = self._split_long_sentences(translated_sentences, max_length=params.split_sentences_at or AIModel.DEFAULT_SPLIT_LENGTH)
+    
     translated_record = TranslatedTranscriptRecord(status=transcript_record.status, ai_model=AIModelName(self.model_name))
-    if params.include_sentences and transcript_record.sentences:
-        translated_sentences = self._translate_sentences(transcript_record.sentences)
-        split_sentences = self._split_long_sentences(translated_sentences, max_length=params.split_sentences_at or AIModel.DEFAULT_SPLIT_LENGTH)
+    if params.include_sentences:
         translated_record.sentences = split_sentences
     if params.include_transcript and transcript_record.transcript:
         translated_transcript = self._translate_transcript(transcript_record.transcript)
         translated_record.transcript = translated_transcript
-    if params.include_srt and translated_record.sentences:
-        translated_record.srt = self._generate_srt(translated_record.sentences)
+    if params.include_srt:
+        translated_record.srt = self._generate_srt(split_sentences or [])
 
     return translated_record
 

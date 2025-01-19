@@ -61,6 +61,7 @@ export async function getTranslationDetails(params) {
     include_srt: !!params.includeSRT,
     include_sentences: !!params.includeSentences,
     include_transcript: !!params.includeTranscript,
+    ai_model: params.aiModel,
   });
   const response = await fetch(`/api/v1/translate?${searchParams}`, {
     method: "GET",
