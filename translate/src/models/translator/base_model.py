@@ -19,7 +19,7 @@ class AIModel(ABC):
 
     if transcript_record.status == "error":
         raise HTTPException(status_code=500, detail="There was an error with the original transcript, translation failed.")
-    if transcript_record.status != "completed":
+    if transcript_record.status and transcript_record.status != "completed":
         raise HTTPException(status_code=400, detail="Transcript not available, please try again later.")
     
     translated_record = TranslatedTranscriptRecord(status=transcript_record.status, ai_model=AIModelName(self.model_name))
