@@ -10,7 +10,8 @@ SERVICE_ACCOUNT_FILE = './service-account.secret.json'
 
 if not os.path.exists(SERVICE_ACCOUNT_FILE):
   with open(SERVICE_ACCOUNT_FILE, 'w') as f:
-    f.write(os.getenv('GOOGLE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS'))
+    credentials = os.getenv('GOOGLE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS')
+    f.write(os.getenv('GOOGLE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS') or "")
 
 credentials = service_account.Credentials.from_service_account_file(
   SERVICE_ACCOUNT_FILE,

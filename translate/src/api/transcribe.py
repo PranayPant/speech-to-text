@@ -7,6 +7,8 @@ import asyncio
 import aiohttp
 from pydantic import BaseModel
 
+from ..types import TranscriptRecord, TranscriptQuery, SubtitleRecord
+
 class PostTranscriptRequest(BaseModel):
     """
     The parameters for the transcription request.
@@ -26,7 +28,7 @@ async def create_transcript(params: PostTranscriptRequest) -> str:
     """
     url = "https://api.assemblyai.com/v2/transcript"
     headers = {
-        "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
+        "authorization": os.getenv("ASSEMBLYAI_API_KEY") or "",
         "content-type": "application/json",
     }
     async with aiohttp.ClientSession() as session:
@@ -37,7 +39,7 @@ async def create_transcript(params: PostTranscriptRequest) -> str:
             result = await response.json()
     return result["id"]
 
-async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -> dict:
+async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -> dict | str:
     """
     Fetches the transcript from AssemblyAI.
 
@@ -50,7 +52,7 @@ async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -
     """
     url = f"https://api.assemblyai.com/v2/transcript/{transcript_id}{resource}"
     headers = {
-        "authorization": os.getenv("ASSEMBLYAI_API_KEY"),
+        "authorization": os.getenv("ASSEMBLYAI_API_KEY") or "",
     }
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
@@ -60,7 +62,7 @@ async def fetch_assembly_ai_transcript(transcript_id: str, resource: str = "") -
                 result = await response.json()
     return result
 
-async def get_transcription(transcript_id: str, include_transcript: bool, include_sentences: bool, include_srt: bool) -> dict:  
+async def get_transcription(params: TranscriptQuery) -> TranscriptRecord:  
     """
     Gets the transcription, sentences, and SRT from AssemblyAI.
 
@@ -73,6 +75,12 @@ async def get_transcription(transcript_id: str, include_transcript: bool, includ
     Returns:
         dict: A dictionary containing the status, transcript, sentences, and SRT.
     """
+
+    transcript_id = params.transcript_id
+    include_transcript = params.include_transcript
+    include_sentences = params.include_sentences
+    include_srt = params.include_srt
+
     tasks = []
     srt_response_index = 0
     transcript_response_index = 0
@@ -93,15 +101,18 @@ async def get_transcription(transcript_id: str, include_transcript: bool, includ
     sentences_response = results[sentences_response_index] if include_sentences else None
     srt_response = results[srt_response_index] if include_srt else None
 
-    if transcript_response and transcript_response.get("status") == "error":
-        raise ValueError("Transcription failed")
-
-    return {
-        "status": transcript_response.get("status") if transcript_response else None,
-        "transcript": transcript_response.get("text") if transcript_response else None,
-        "sentences": [
-            {"text": sentence["text"], "start": sentence["start"], "end": sentence["end"]}
+    transcript_record = TranscriptRecord(
+        status=transcript_response.get("status") if transcript_response else None,
+        transcript=transcript_response.get("text") if transcript_response else None,
+        sentences=[
+            SubtitleRecord(
+                text=sentence["text"], 
+                start=sentence["start"], 
+                end=sentence["end"], 
+                length=len(sentence["text"])
+            )
             for sentence in sentences_response.get("sentences", [])
         ] if sentences_response else None,
-        "srt": srt_response if srt_response else None,
-    }
+        srt=srt_response if srt_response else None,
+    )
+    return transcript_record

@@ -1,8 +1,13 @@
-from fastapi import FastAPI, APIRouter, Response
+from fastapi import FastAPI, APIRouter, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from typing import Annotated
+
+from .models.translator.helpers import get_translator
+
+from .types import AIModelName, TranscriptRecord, TranslatedTranscriptRecord, TranslationQuery, TranscriptQuery
+
 from .api.transcribe import get_transcription, create_transcript, PostTranscriptRequest
-from .api.translation import get_translation
 from .api.google_drive import upload_to_google_drive, get_file_info, FileUploadRequest
 
 app = FastAPI()
@@ -17,20 +22,21 @@ async def transcribe(request_body: PostTranscriptRequest):
     return {"transcript_id": transcript_id}
 
 @router.get("/transcript")
-async def transcript(transcript_id: str, include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
+async def transcript(query: Annotated[TranscriptQuery, Query()]) -> TranscriptRecord:
     """
     Take a transcript ID and return the transcript, sentences, and SRT file.
     """
-    transcript_details = await get_transcription(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt)
+    transcript_details = await get_transcription(query)
     return transcript_details
 
 @router.get("/translate")
-async def translate(transcript_id: str, ai_model: str | None = 'gpt-4o', include_transcript: bool = False, include_srt: bool = False, include_sentences: bool = False):
+def translate(query: Annotated[TranslationQuery, Query()]) -> TranslatedTranscriptRecord:
     """
     Take a transcript ID and return the translated transcript, sentences, and SRT file.
     """
-    translation_details = await get_translation(transcript_id=transcript_id, include_transcript=include_transcript, include_sentences=include_sentences, include_srt=include_srt, ai_model=ai_model)
-    return translation_details
+    translator = get_translator(ai_model = AIModelName(query.ai_model) if query.ai_model else None)
+    translated_transcript = translator.translate(query)
+    return translated_transcript
 
 @router.post("/drive/upload")
 async def upload(request_body: FileUploadRequest):
@@ -41,7 +47,7 @@ async def upload(request_body: FileUploadRequest):
     return upload_response
 
 @router.get("/drive/info")
-async def upload(file_id: str):
+async def info(file_id: str):
     """
     Get file info of file with given file_id.
     """

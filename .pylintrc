@@ -1,2 +1,4 @@
 # enforce 2 spaces of indentation
 indent-string="  "
+# enforce strict type checks
+typecheck-strictness=high
