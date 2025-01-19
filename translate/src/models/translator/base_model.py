@@ -10,7 +10,9 @@ from ...types import AIModelName, TranslatedTranscriptRecord, TranslationQuery, 
 class AIModel(ABC):
 
   DEFAULT_SPLIT_LENGTH = 80
-  model_name = AIModelName.GEMINI.value
+
+  def __init__(self, ai_model: AIModelName):
+    self.model_name = ai_model.value
 
   def translate(self, params: TranslationQuery) -> TranslatedTranscriptRecord:
     transcript_record = asyncio.run(get_transcription(params.transcript_query()))
@@ -22,39 +24,39 @@ class AIModel(ABC):
     
     translated_record = TranslatedTranscriptRecord(status=transcript_record.status, ai_model=AIModelName(self.model_name))
     if params.include_sentences and transcript_record.sentences:
-        translated_sentences = self.translate_sentences(transcript_record.sentences)
-        split_sentences = self.split_long_sentences(translated_sentences, max_length=params.split_sentences_at or AIModel.DEFAULT_SPLIT_LENGTH)
+        translated_sentences = self._translate_sentences(transcript_record.sentences)
+        split_sentences = self._split_long_sentences(translated_sentences, max_length=params.split_sentences_at or AIModel.DEFAULT_SPLIT_LENGTH)
         translated_record.sentences = split_sentences
     if params.include_transcript and transcript_record.transcript:
-        translated_transcript = self.translate_transcript(transcript_record.transcript)
+        translated_transcript = self._translate_transcript(transcript_record.transcript)
         translated_record.transcript = translated_transcript
     if params.include_srt and translated_record.sentences:
-        translated_record.srt = self.generate_srt(translated_record.sentences)
+        translated_record.srt = self._generate_srt(translated_record.sentences)
 
     return translated_record
 
   @abstractmethod
-  def translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
+  def _translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
     raise NotImplementedError
 
   @abstractmethod
-  def translate_transcript(self, transcript: str) -> str:
+  def _translate_transcript(self, transcript: str) -> str:
     raise NotImplementedError
 
-  def generate_srt(self, sentences: list[SubtitleRecord]) -> str:
+  def _generate_srt(self, sentences: list[SubtitleRecord]) -> str:
     return "\n".join(
-      f"{index + 1}\n{self.format_srt_timestamp(start)} --> {self.format_srt_timestamp(end)}\n{text}\n"
+      f"{index + 1}\n{self._format_srt_timestamp(start)} --> {self._format_srt_timestamp(end)}\n{text}\n"
       for index, (start, end, text) in enumerate((sentence.start, sentence.end, sentence.text) for sentence in sentences)
     )
   
-  def format_srt_timestamp(self, ms: int) -> str:
+  def _format_srt_timestamp(self, ms: int) -> str:
     hours = str(ms // 3600000).zfill(2)
     minutes = str((ms % 3600000) // 60000).zfill(2)
     seconds = str((ms % 60000) // 1000).zfill(2)
     milliseconds = str(ms % 1000).zfill(3)
     return f"{hours}:{minutes}:{seconds},{milliseconds}"
 
-  def split_long_sentences(self, sentences: list[SubtitleRecord], max_length: Optional[int]) -> list[SubtitleRecord]:
+  def _split_long_sentences(self, sentences: list[SubtitleRecord], max_length: Optional[int]) -> list[SubtitleRecord]:
     if not max_length:
       for sentence in sentences:
         sentence.length = len(sentence.text)

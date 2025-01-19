@@ -7,10 +7,11 @@ from .base_model import AIModel
 
 class GeminiTranslator(AIModel):
 
-    model_name = AIModelName.GEMINI.value
-    model = genai.GenerativeModel(model_name)
+    def __init__(self, ai_model: AIModelName):
+        super().__init__(ai_model)
+        self.model = genai.GenerativeModel(ai_model.value)
 
-    def translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
+    def _translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
         
         hindi_sentences = [sentence.text for sentence in sentences]
 
@@ -21,7 +22,7 @@ class GeminiTranslator(AIModel):
             Use this as input:
             sentences = """ + str(hindi_sentences) + """
             """
-        response = GeminiTranslator.model.generate_content(
+        response = self.model.generate_content(
             contents=prompt, 
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json", 
@@ -37,7 +38,7 @@ class GeminiTranslator(AIModel):
 
         return result
     
-    def translate_transcript(self, transcript: str) -> str:
+    def _translate_transcript(self, transcript: str) -> str:
 
         prompt = """
             You are given a Hindi transcript.
@@ -47,6 +48,6 @@ class GeminiTranslator(AIModel):
             Use this as input:
             sentences = """ + transcript + """
             """
-        result = GeminiTranslator.model.generate_content(prompt)
+        result = self.model.generate_content(prompt)
 
         return result.text

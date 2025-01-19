@@ -7,15 +7,16 @@ from .base_model import AIModel
 
 class OpenAITranslator(AIModel):
 
-  model_name = AIModelName.OPENAI.value
-  model = OpenAI()
+  def __init__(self, ai_model: AIModelName):
+    super().__init__(ai_model)
+    self.model = OpenAI()
 
-  def translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
+  def _translate_sentences(self, sentences: list[SubtitleRecord]) -> list[SubtitleRecord]:
     
     hindi_sentences = [sentence.model_dump_json() for sentence in sentences]
 
-    translation_response = OpenAITranslator.model.chat.completions.create(
-      model=OpenAITranslator.model_name,
+    translation_response = self.model.chat.completions.create(
+      model=self.model_name,
       messages=[
         {
           "role": "developer",
@@ -34,10 +35,10 @@ class OpenAITranslator(AIModel):
 
     return result
     
-  def translate_transcript(self, transcript: str) -> str:
+  def _translate_transcript(self, transcript: str) -> str:
 
-    translation_response = OpenAITranslator.model.chat.completions.create(
-      model=OpenAITranslator.model_name,
+    translation_response = self.model.chat.completions.create(
+      model=self.model_name,
       messages=[
         {
           "role": "developer",
