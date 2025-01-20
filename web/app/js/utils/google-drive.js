@@ -21,8 +21,8 @@ export function fileIdToGoogleDriveLink(fileId) {
   return fileLink;
 }
 
-export function filenameToSubtitleFilename({ filename, language_code = "hi" }) {
+export function filenameToSubtitleFilename({ filename, languageCode = "hi", aiModel }) {
   const nameWithoutExtension =
     filename?.substring(0, filename?.lastIndexOf(".")) || "subtitles";
-  return `${nameWithoutExtension}.${language_code}.srt`;
+  return `${nameWithoutExtension}${aiModel ? `.${aiModel}` : ''}.${languageCode}.srt`;
 }
