@@ -1,15 +1,24 @@
-name: "Start Bunnyshell Environment"
+name: "Keep Bunnyshell Environment Up"
 on:
   pull_request:
     types: [opened, reopened, synchronize]
     branches:
-      - main
+      - python-service
   schedule:
-    - cron: "*/30 * * * *"
+     - cron: "0 */2 * * *"
 
 jobs:
-  keep_dev_warm:
-    name: Make sure Bunnyshell is running
+  stop_env:
+    name: Stop Bunnyshell Environment
+    uses: bunnyshell/workflows/.github/workflows/stop-env.yaml@v2
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      env-id: ${{ vars.BUNNYSHELL_PYTHON_SERVICE_ENV_ID }}
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+  start_env:
+    name: Start Bunnyshell Environment
+    needs: stop_env
     uses: bunnyshell/workflows/.github/workflows/start-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
