@@ -1,9 +1,5 @@
 name: "Keep Bunnyshell Environment Up"
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    branches:
-      - python-service
   schedule:
      - cron: "0 */2 * * *"
 
