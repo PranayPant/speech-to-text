@@ -2,8 +2,8 @@ import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from pydantic import BaseModel
 
+from ..types import FileUploadRequest
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 SERVICE_ACCOUNT_FILE = './service-account.secret.json'
@@ -20,14 +20,9 @@ credentials = service_account.Credentials.from_service_account_file(
 
 drive_service = build('drive', 'v3', credentials=credentials)
 
-class FileUploadRequest(BaseModel):
-  file_name: str
-  text: str
-  file_id: str | None = None
-
 def upload_to_google_drive(params: FileUploadRequest) -> dict:
   
-  text, file_name = params.text, params.file_name
+  text, file_name, properties = params.text, params.file_name, params.properties
 
   with open(file_name, 'w') as f:
     f.write(text)
@@ -35,7 +30,8 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
   try:
     file_metadata = {
       'name': file_name,
-      'parents': [os.getenv('GOOGLE_DRIVE_SRT_FOLDER_ID')]
+      'parents': [os.getenv('GOOGLE_DRIVE_SRT_FOLDER_ID')],
+      'properties': properties
     }
     media = MediaFileUpload(file_name, mimetype='text/plain')
     file = drive_service.files().create(
@@ -59,7 +55,7 @@ def get_file_info(file_id: str) -> dict:
   try:
     file = drive_service.files().get(
       fileId=file_id,
-      fields='name,webViewLink'
+      fields='name,webViewLink,properties'
     ).execute()
   except Exception as error:
     print(f"Error getting file info from Google Drive: {error}")
@@ -67,5 +63,6 @@ def get_file_info(file_id: str) -> dict:
 
   return {
     'name': file.get('name'),
-    'webViewLink': file.get('webViewLink')
+    'webViewLink': file.get('webViewLink'),
+    'properties': file.get('properties')
   }

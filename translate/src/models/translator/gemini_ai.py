@@ -65,6 +65,8 @@ class GeminiTranslator(AIModel):
         chat_history = [{"parts":"You use single quotes to denote a quotation instead of a backslash followed by double quotes.", "role": "user"}]
         ai_chat = self.model.start_chat(history=chat_history) # type: ignore
         translated_transcript = ai_chat.send_message(f"Translate the following Hindi transcript into English, outputting only the response text: {transcript_record.transcript}")
+        polished_transcript = ai_chat.send_message(f"Now polish the translated transcript so it sounds more natural to English speakers, outputting only the response text.")
+
         translated_sentences = ai_chat.send_message(f"Given the following array of sentences from the Hindi transcript that contain the text, start, and end times, figure out the corresponding start and end times of the English sentences and output a new sentences array as stringified json with the translated text and corresponding start and end times: {transcript_record.sentences}")
         sentences_json = json.loads(translated_sentences.text.strip("```json\n").strip("\n```"))
         translated_sentences = [SubtitleRecord(**sentence, length=len(sentence["text"])) for sentence in sentences_json]
@@ -72,6 +74,7 @@ class GeminiTranslator(AIModel):
         srt = self._generate_srt(split_sentences)
         translated_transcript_record = TranslatedTranscriptRecord(
             transcript=translated_transcript.text,
+            polished_transcript=polished_transcript.text,
             sentences=split_sentences,
             srt=srt,
             ai_model=AIModelName.GEMINI,

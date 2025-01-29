@@ -20,6 +20,7 @@ class TranscriptRecord(BaseModel):
 
 class TranslatedTranscriptRecord(TranscriptRecord):
   ai_model: AIModelName
+  polished_transcript: Optional[str] = None
 
 class TranscriptQuery(BaseModel):
   transcript_id: str
@@ -34,3 +35,13 @@ class TranslationQuery(TranscriptQuery):
   def transcript_query(self):
     transcript_query = self.model_dump(exclude={'ai_model'})
     return TranscriptQuery(**transcript_query)
+  
+class FileUploadRequest(BaseModel):
+  file_name: str
+  text: str
+  file_id: str | None = None
+  properties: dict | None = None
+
+class CreateTranslationResponse(BaseModel):
+  srt_file_id: str
+  status: Literal['processing', 'completed', 'error']

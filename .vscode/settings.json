@@ -11,7 +11,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8"
+    "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.analysis.extraPaths": ["./translate/venv/Lib/site-packages"],
   "python.analysis.typeCheckingMode": "standard",
