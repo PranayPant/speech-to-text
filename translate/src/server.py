@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 
 from .models.translator.helpers import get_translator
+from .models.translator.gemini_ai import GeminiTranslator
 
 from .types import AIModelName, TranscriptRecord, TranslatedTranscriptRecord, TranslationQuery, TranscriptQuery
 
@@ -36,6 +37,15 @@ def translate(query: Annotated[TranslationQuery, Query()]) -> TranslatedTranscri
     """
     translator = get_translator(ai_model = AIModelName(query.ai_model) if query.ai_model else None)
     translated_transcript = translator.translate(query)
+    return translated_transcript
+
+@router.get("/v2/translate")
+async def translate_v2(transcript_id: str, split_sentences_at: int | None = None) -> TranslatedTranscriptRecord:
+    """
+    Take a transcript ID and return the translated transcript, sentences, and SRT file.
+    """
+    gemini_ai = GeminiTranslator(ai_model=AIModelName.GEMINI)
+    translated_transcript = await gemini_ai.translate_v2(transcript_id=transcript_id, split_sentences_at=split_sentences_at)
     return translated_transcript
 
 @router.post("/drive/upload")

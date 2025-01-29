@@ -1,7 +1,8 @@
 import google.generativeai as genai
 import json
 
-from ...types import AIModelName, SubtitleRecord
+from ...types import AIModelName, SubtitleRecord, TranscriptQuery, TranslatedTranscriptRecord
+from ...api.transcribe import get_transcription
 
 from .base_model import AIModel
 
@@ -41,13 +42,39 @@ class GeminiTranslator(AIModel):
     def _translate_transcript(self, transcript: str) -> str:
 
         prompt = """
-            You are given a Hindi transcript.
-            Translate the Hindi transcript to English, ignoring any Sanskrit quotations.
+            Translate the given Hindi transcript into English.
             Return only the translated transcript in the response.
 
             Use this as input:
-            sentences = """ + transcript + """
+            hindi_transcript = """ + transcript + """
             """
         result = self.model.generate_content(prompt)
 
         return result.text
+    
+    async def translate_v2(self, transcript_id: str, split_sentences_at: int | None) -> TranslatedTranscriptRecord:
+
+        transcript_query = TranscriptQuery(
+            transcript_id=transcript_id, 
+            include_sentences=True, 
+            include_transcript=True, 
+            include_srt=False
+        )
+        transcript_record = await get_transcription(transcript_query)
+
+        chat_history = [{"parts":"You use single quotes to denote a quotation instead of a backslash followed by double quotes.", "role": "user"}]
+        ai_chat = self.model.start_chat(history=chat_history) # type: ignore
+        translated_transcript = ai_chat.send_message(f"Translate the following Hindi transcript into English, outputting only the response text: {transcript_record.transcript}")
+        translated_sentences = ai_chat.send_message(f"Given the following array of sentences from the Hindi transcript that contain the text, start, and end times, figure out the corresponding start and end times of the English sentences and output a new sentences array as stringified json with the translated text and corresponding start and end times: {transcript_record.sentences}")
+        sentences_json = json.loads(translated_sentences.text.strip("```json\n").strip("\n```"))
+        translated_sentences = [SubtitleRecord(**sentence, length=len(sentence["text"])) for sentence in sentences_json]
+        split_sentences = self._split_long_sentences(sentences=translated_sentences, max_length=split_sentences_at or self.DEFAULT_SPLIT_LENGTH)
+        srt = self._generate_srt(split_sentences)
+        translated_transcript_record = TranslatedTranscriptRecord(
+            transcript=translated_transcript.text,
+            sentences=split_sentences,
+            srt=srt,
+            ai_model=AIModelName.GEMINI,
+        )
+
+        return translated_transcript_record
