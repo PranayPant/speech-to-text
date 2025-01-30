@@ -29,18 +29,24 @@ class TranscriptQuery(BaseModel):
   include_sentences: Optional[bool] = False
 
 class TranslationQuery(TranscriptQuery):
-  ai_model: Optional[AIModelName] = None
-  split_sentences_at: Optional[int] = None
+    ai_model: Optional[AIModelName] = None
+    split_sentences_at: Optional[int] = None
 
-  def transcript_query(self):
-    transcript_query = self.model_dump(exclude={'ai_model'})
-    return TranscriptQuery(**transcript_query)
-  
+    def transcript_query(self):
+        transcript_query = self.model_dump(exclude={'ai_model'})
+        return TranscriptQuery(**transcript_query)
+
 class FileUploadRequest(BaseModel):
   file_name: str
-  text: str
+  text: str | None = None
   file_id: str | None = None
   properties: dict | None = None
+
+class FileUpdateRequest(BaseModel):
+  text: str
+  file_id: str
+  properties: dict | None = None
+  file_name: str | None = None
 
 class CreateTranslationResponse(BaseModel):
   srt_file_id: str

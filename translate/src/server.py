@@ -14,10 +14,15 @@ from .types import (
     TranslationQuery,
     TranscriptQuery,
     FileUploadRequest,
+    FileUpdateRequest,
 )
 
 from .api.transcribe import get_transcription, create_transcript, PostTranscriptRequest
-from .api.google_drive import upload_to_google_drive, get_file_info
+from .api.google_drive import (
+    upload_to_google_drive,
+    get_file_info,
+    update_file_google_drive,
+)
 
 app = FastAPI()
 router = APIRouter(redirect_slashes=False)
@@ -101,7 +106,7 @@ async def translate_v2(
 
 
 @router.post("/drive/upload")
-async def upload(request_body: FileUploadRequest):
+def upload(request_body: FileUploadRequest):
     """
     Create a text file on google drive with given requets body.
     """
@@ -109,8 +114,17 @@ async def upload(request_body: FileUploadRequest):
     return upload_response
 
 
+@router.patch("/drive/update")
+def update(request_body: FileUpdateRequest):
+    """
+    Create a text file on google drive with given requets body.
+    """
+    upload_response = update_file_google_drive(params=request_body)
+    return upload_response
+
+
 @router.get("/drive/info")
-async def info(file_id: str):
+def info(file_id: str):
     """
     Get file info of file with given file_id.
     """
