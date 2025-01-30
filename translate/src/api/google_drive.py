@@ -19,7 +19,6 @@ credentials = service_account.Credentials.from_service_account_file(
 
 drive_service = build("drive", "v3", credentials=credentials)
 
-
 def update_file_google_drive(params: FileUpdateRequest) -> dict:
     text, file_id, properties, file_name = (
         params.text,
@@ -32,7 +31,7 @@ def update_file_google_drive(params: FileUpdateRequest) -> dict:
             with open(file_name, "w") as f:
                 f.write(text)
         file_metadata = {"properties": properties, "file_name": file_name}
-        media = MediaFileUpload(text, mimetype="text/plain") if text else None
+        media = MediaFileUpload(file_name, mimetype="text/plain") if text else None
         file = (
             drive_service.files()
             .update(fileId=file_id, body=file_metadata, media_body=media)
