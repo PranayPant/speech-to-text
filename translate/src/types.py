@@ -43,10 +43,10 @@ class FileUploadRequest(BaseModel):
   properties: dict | None = None
 
 class FileUpdateRequest(BaseModel):
+  file_name: str
   text: str
   file_id: str
   properties: dict | None = None
-  file_name: str | None = None
 
 class CreateTranslationResponse(BaseModel):
   srt_file_id: str

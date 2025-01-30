@@ -31,7 +31,7 @@ def update_file_google_drive(params: FileUpdateRequest) -> dict:
             with open(file_name, "w") as f:
                 f.write(text)
         file_metadata = {"properties": properties, "file_name": file_name}
-        media = MediaFileUpload(file_name, mimetype="text/plain") if text else None
+        media = MediaFileUpload(file_name, mimetype="text/plain") if text and file_name else None
         file = (
             drive_service.files()
             .update(fileId=file_id, body=file_metadata, media_body=media)
