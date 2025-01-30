@@ -9,15 +9,12 @@ SCOPES = ["https://www.googleapis.com/auth/drive"]
 SERVICE_ACCOUNT_FILE = "./service-account.secret.json"
 
 if not os.path.exists(SERVICE_ACCOUNT_FILE):
-    print("Creating service account file")
     with open(SERVICE_ACCOUNT_FILE, "w") as f:
         credentials = os.getenv("GOOGLE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS")
         f.write(os.getenv("GOOGLE_DRIVE_SERVICE_ACCOUNT_CREDENTIALS") or "")
-else:
-    print("Service account file already exists")
 
 credentials = service_account.Credentials.from_service_account_file(
-    filename=SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
 )
 
 drive_service = build("drive", "v3", credentials=credentials)
@@ -31,8 +28,11 @@ def update_file_google_drive(params: FileUpdateRequest) -> dict:
         params.file_name,
     )
     try:
-        file_metadata = {"properties": properties, "name": file_name}
-        media = MediaFileUpload(text, mimetype="text/plain")
+        if text and file_name:
+            with open(file_name, "w") as f:
+                f.write(text)
+        file_metadata = {"properties": properties, "file_name": file_name}
+        media = MediaFileUpload(text, mimetype="text/plain") if text else None
         file = (
             drive_service.files()
             .update(fileId=file_id, body=file_metadata, media_body=media)
@@ -50,13 +50,17 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
 
     text, file_name, properties = params.text, params.file_name, params.properties
 
+    if text and file_name:
+        with open(file_name, "w") as f:
+            f.write(text)
+
     try:
         file_metadata = {
             "name": file_name,
             "parents": [os.getenv("GOOGLE_DRIVE_SRT_FOLDER_ID")],
             "properties": properties,
         }
-        media = MediaFileUpload(text, mimetype="text/plain") if text else None
+        media = MediaFileUpload(file_name, mimetype="text/plain") if text else None
         file = (
             drive_service.files()
             .create(body=file_metadata, media_body=media, fields="id")
