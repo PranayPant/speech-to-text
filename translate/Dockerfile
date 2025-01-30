@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy the application code
 COPY ./src/ ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Command to run the FastAPI server
 CMD ["fastapi", "run", "./server.py", "--port", "8001"]
