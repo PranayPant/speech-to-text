@@ -25,7 +25,6 @@ class AIModel(ABC):
         # Need to  translate sentences to generate SRT
         if params.include_srt:
             transcript_query.include_sentences = True
-        print(transcript_query.model_dump_json())
         transcript_record = asyncio.run(get_transcription(transcript_query))
 
         if transcript_record.status == "error":

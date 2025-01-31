@@ -26,12 +26,13 @@ def update_file_google_drive(params: FileUpdateRequest) -> dict:
         params.properties,
         params.file_name,
     )
+    temp_file_path = "./temp.txt"
     try:
-        if text and file_name:
-            with open(file_name, "w") as f:
+        if text:
+            with open(temp_file_path, "w") as f:
                 f.write(text)
-        file_metadata = {"properties": properties, "file_name": file_name}
-        media = MediaFileUpload(file_name, mimetype="text/plain") if text and file_name else None
+        file_metadata = {"properties": properties}
+        media = MediaFileUpload(temp_file_path, mimetype="text/plain") if text else None
         file = (
             drive_service.files()
             .update(fileId=file_id, body=file_metadata, media_body=media)
@@ -41,6 +42,12 @@ def update_file_google_drive(params: FileUpdateRequest) -> dict:
     except Exception as error:
         print(f"Error updating file on Google Drive: {error}")
         raise error
+    finally:
+        try:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+        except Exception as error:
+            print(f"Error deleting file: {error}")
 
     return {"file_id": file.get("id")}
 
@@ -49,9 +56,8 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
 
     text, file_name, properties = params.text, params.file_name, params.properties
 
-    if text and file_name:
-        with open(file_name, "w") as f:
-            f.write(text)
+    with open(file_name, "w") as f:
+        f.write(text or "")
 
     try:
         file_metadata = {
@@ -59,7 +65,7 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
             "parents": [os.getenv("GOOGLE_DRIVE_SRT_FOLDER_ID")],
             "properties": properties,
         }
-        media = MediaFileUpload(file_name, mimetype="text/plain") if text else None
+        media = MediaFileUpload(file_name, mimetype="text/plain")
         file = (
             drive_service.files()
             .create(body=file_metadata, media_body=media, fields="id")
@@ -71,7 +77,8 @@ def upload_to_google_drive(params: FileUploadRequest) -> dict:
         raise error
     finally:
         try:
-            os.remove(file_name)
+            if os.path.exists(file_name):
+                os.remove(file_name)
         except Exception as error:
             print(f"Error deleting file: {error}")
 
@@ -82,7 +89,7 @@ def get_file_info(file_id: str) -> dict:
     try:
         file = (
             drive_service.files()
-            .get(fileId=file_id, fields="name,webViewLink,properties")
+            .get(fileId=file_id, fields="name,webViewLink,properties,size")
             .execute()
         )
     except Exception as error:
@@ -93,4 +100,5 @@ def get_file_info(file_id: str) -> dict:
         "name": file.get("name"),
         "webViewLink": file.get("webViewLink"),
         "properties": file.get("properties"),
+        "size": file.get("size"),
     }

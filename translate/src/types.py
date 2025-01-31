@@ -43,9 +43,9 @@ class FileUploadRequest(BaseModel):
   properties: dict | None = None
 
 class FileUpdateRequest(BaseModel):
-  file_name: str
   text: str
   file_id: str
+  file_name: str | None = None
   properties: dict | None = None
 
 class CreateTranslationRequest(BaseModel):

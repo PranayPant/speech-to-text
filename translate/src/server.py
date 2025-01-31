@@ -82,6 +82,7 @@ def create_translation(
     )
     upload_response = upload_to_google_drive(params=file_upload_request)
     srt_file_id = upload_response["file_id"]
+    body.srt_file_id = srt_file_id
     create_translation_response = CreateTranslationResponse(
         srt_file_id=srt_file_id, status="processing"
     )
