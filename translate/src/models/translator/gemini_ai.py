@@ -16,7 +16,10 @@ class GeminiTranslator(AIModel):
 
     def __init__(self, ai_model: AIModelName):
         super().__init__(ai_model)
-        self.model = genai.GenerativeModel(ai_model.value)
+        self.model = genai.GenerativeModel(
+            ai_model.value,
+            generation_config=genai.GenerationConfig(max_output_tokens=8192),
+        )
 
     def _translate_sentences(
         self, sentences: list[SubtitleRecord]
@@ -86,7 +89,7 @@ class GeminiTranslator(AIModel):
             {
                 "parts": "You use single quotes to denote a quotation instead of a backslash followed by double quotes.",
                 "role": "user",
-            }
+            },
         ]
         ai_chat = self.model.start_chat(history=chat_history)  # type: ignore
         translated_transcript = ai_chat.send_message(
@@ -97,7 +100,7 @@ class GeminiTranslator(AIModel):
         )
 
         translated_sentences = ai_chat.send_message(
-            f"Given the following array of sentences from the Hindi transcript that contain the text, start, and end times, figure out the corresponding start and end times of the English sentences from the polished transcript and output a new json array with the translated text and corresponding start and end times: {transcript_record.sentences}"
+            f"Given the following array of sentences from the Hindi transcript that contain the text, start, and end times, figure out the corresponding start and end times of the English sentences from the polished transcript and output an array of arrays in form [[translated_text, start, end]]: {transcript_record.sentences}"
         )
         translated_sentences_stripped = translated_sentences.text.strip(
             "```json\n"
@@ -105,10 +108,10 @@ class GeminiTranslator(AIModel):
         sentences_json = json.loads(translated_sentences_stripped)
         translated_sentences = [
             SubtitleRecord(
-                text=sentence["text"],
-                start=sentence["start"],
-                end=sentence["end"],
-                length=len(sentence["text"]),
+                text=sentence[0],
+                start=sentence[1],
+                end=sentence[2],
+                length=len(sentence[0]),
             )
             for sentence in sentences_json
         ]

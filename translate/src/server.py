@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from typing import Annotated
 
-from .models.translator.helpers import create_translation_task, get_translator
+from .models.translator.helpers import create_translation_task_sync, get_translator
 from .models.translator.gemini_ai import GeminiTranslator
 
 from .types import (
@@ -87,7 +87,7 @@ def create_translation(
         srt_file_id=srt_file_id, status="processing"
     )
 
-    background_tasks.add_task(create_translation_task, body)
+    background_tasks.add_task(create_translation_task_sync, body)
 
     return create_translation_response
 
