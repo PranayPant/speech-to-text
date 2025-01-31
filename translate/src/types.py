@@ -48,6 +48,13 @@ class FileUpdateRequest(BaseModel):
   file_id: str
   properties: dict | None = None
 
+class CreateTranslationRequest(BaseModel):
+  transcript_id: str
+  srt_file_name: str
+  srt_file_id: str | None = None
+  split_sentences_at: int | None = None
+  ai_model: AIModelName | None = None
+
 class CreateTranslationResponse(BaseModel):
   srt_file_id: str
   status: Literal['processing', 'completed', 'error']

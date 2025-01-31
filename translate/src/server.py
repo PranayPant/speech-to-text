@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from typing import Annotated
 
-from .models.translator.helpers import get_translator
+from .models.translator.helpers import create_translation_task, get_translator
 from .models.translator.gemini_ai import GeminiTranslator
 
 from .types import (
     AIModelName,
+    CreateTranslationRequest,
     CreateTranslationResponse,
     TranscriptRecord,
     TranslatedTranscriptRecord,
@@ -62,9 +63,7 @@ def translate(
 
 @router.post("/v2/translate")
 def create_translation(
-    transcript_id: str,
-    background_tasks: BackgroundTasks,
-    split_sentences_at: int | None = None,
+    body: CreateTranslationRequest, background_tasks: BackgroundTasks
 ) -> CreateTranslationResponse:
     """
     Initiate a translation job for a transcript and create a temporary SRT file resource on Goggle Drive.
@@ -74,9 +73,11 @@ def create_translation(
     Returns: File ID of the SRT file.
     """
 
+    transcript_id = body.transcript_id
+    srt_file_name = body.srt_file_name
+
     file_upload_request = FileUploadRequest(
-        file_name="temp.txt",
-        text="",
+        file_name=srt_file_name,
         properties={"transcript_id": transcript_id},
     )
     upload_response = upload_to_google_drive(params=file_upload_request)
@@ -85,14 +86,13 @@ def create_translation(
         srt_file_id=srt_file_id, status="processing"
     )
 
-    gemini_ai = GeminiTranslator(ai_model=AIModelName.GEMINI)
-    background_tasks.add_task(gemini_ai.translate_v2, transcript_id, split_sentences_at)
+    background_tasks.add_task(create_translation_task, body)
 
     return create_translation_response
 
 
 @router.get("/v2/translate")
-async def translate_v2(
+async def get_translation_details(
     transcript_id: str, split_sentences_at: int | None = None
 ) -> TranslatedTranscriptRecord:
     """
