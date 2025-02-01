@@ -10,6 +10,7 @@ from ...types import (
 from ...api.transcribe import get_transcription
 
 from .base_model import AIModel
+import time
 
 
 class GeminiTranslator(AIModel):
@@ -91,20 +92,34 @@ class GeminiTranslator(AIModel):
                 "role": "user",
             },
         ]
+
         ai_chat = self.model.start_chat(history=chat_history)  # type: ignore
+
+        start_time = time.time()
         translated_transcript = ai_chat.send_message(
-            f"Translate the following Hindi transcript into English, outputting only the response text: {transcript_record.transcript}"
+            f"Read over the Hindi transcript and create an English translation that sounds natural and flowing to native English speakers, outputting only the response text: {transcript_record.transcript}"
         )
-        polished_transcript = ai_chat.send_message(
-            f"Now polish the translated transcript so it sounds more natural to English speakers, outputting only the response text."
-        )
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Translation execution time: {execution_time:.2f} seconds")
+
+        with open("./data/translated_transcript.txt", "w") as file:
+            file.write(translated_transcript.text)
+
+        # polished_transcript = ai_chat.send_message(
+        #     f"Now polish the translated transcript so it sounds more natural to English speakers, outputting only the response text."
+        # )
 
         translated_sentences = ai_chat.send_message(
-            f"Given the following array of sentences from the Hindi transcript that contain the text, start, and end times, figure out the corresponding start and end times of the English sentences from the polished transcript and output an array of arrays in form [[translated_text, start, end]]: {transcript_record.sentences}"
+            "You are given an array of sentences from the Hindi transcript that contain text, start, and end times. Using the sentences from the previously translated transcript, figure out the best way to translate each hindi sentence into English. Output only the response as a json array in the form [ {start_time, end_time, original_hindi_sentence, english_translation} ]." + f"Use the following as input: {transcript_record.sentences}"
         )
         translated_sentences_stripped = translated_sentences.text.strip(
             "```json\n"
         ).strip("\n```")
+
+        with open("./data/translated_sentences.json", "w") as file:
+            file.write(translated_sentences_stripped)
+
         sentences_json = json.loads(translated_sentences_stripped)
         translated_sentences = [
             SubtitleRecord(
@@ -122,7 +137,7 @@ class GeminiTranslator(AIModel):
         srt = self._generate_srt(split_sentences)
         translated_transcript_record = TranslatedTranscriptRecord(
             transcript=translated_transcript.text,
-            polished_transcript=polished_transcript.text,
+            # polished_transcript=polished_transcript.text,
             sentences=split_sentences,
             srt=srt,
             ai_model=AIModelName.GEMINI,
