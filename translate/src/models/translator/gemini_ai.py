@@ -86,6 +86,15 @@ class GeminiTranslator(AIModel):
         )
         transcript_record = await get_transcription(transcript_query)
 
+        if not transcript_record.sentences:
+            raise ValueError(
+                "Transcript does not contain sentence information. Please use a different model."
+            )
+        
+        with open("./data/hindi_sentences.json", "w") as file:
+            sentences_json = [sentence.model_dump_json() for sentence in transcript_record.sentences]
+            file.write(json.dumps(sentences_json))
+
         chat_history = [
             {
                 "parts": "You use single quotes to denote a quotation instead of a backslash followed by double quotes.",
@@ -123,10 +132,10 @@ class GeminiTranslator(AIModel):
         sentences_json = json.loads(translated_sentences_stripped)
         translated_sentences = [
             SubtitleRecord(
-                text=sentence[0],
-                start=sentence[1],
-                end=sentence[2],
-                length=len(sentence[0]),
+                text=sentence['english_translation'],
+                start=sentence['start_time'],
+                end=sentence['end_time'],
+                length=len(sentence['english_translation']),
             )
             for sentence in sentences_json
         ]
