@@ -4,6 +4,9 @@ FROM python:3.11-slim-buster
 # Set the working directory
 WORKDIR /app
 
+# Create a data directory
+RUN mkdir -p /app/data
+
 # Copy the application code
 COPY ./src/ ./
 
