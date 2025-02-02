@@ -91,9 +91,13 @@ class GeminiTranslator(AIModel):
                 "Transcript does not contain sentence information. Please use a different model."
             )
 
-        with open("./data/hindi_sentences.json", "w", encoding='utf-8') as file:
-            sentences_json = [sentence.model_dump_json() for sentence in transcript_record.sentences]
-            file.write(json.dumps(sentences_json, ensure_ascii=False))
+        with open("./data/hindi_sentences.json", "w", encoding="utf-8") as file:
+            sentences_json = [
+                json.loads(sentence.model_dump_json())
+                for sentence in transcript_record.sentences
+            ]
+
+            json.dump(sentences_json, file, ensure_ascii=False, indent=4)
 
         chat_history = [
             {
@@ -117,7 +121,8 @@ class GeminiTranslator(AIModel):
 
         start_time = time.time()
         translated_sentences = ai_chat.send_message(
-            "You are given an array of sentences from the Hindi transcript that contain text, start, and end times. Using the sentences from the previously translated transcript, figure out the best way to translate each hindi sentence into English. Output only the response as a json array in the form [ {start_time, end_time, original_hindi_sentence, english_translation} ]." + f"Use the following as input: {transcript_record.sentences}"
+            "You are given an array of sentences from the Hindi transcript that contain text, start, and end times. Using the sentences from the previously translated transcript, figure out the best way to translate each hindi sentence into English. Output only the response as a json array in the form [ {start_time, end_time, original_hindi_sentence, english_translation} ]."
+            + f"Use the following as input: {transcript_record.sentences}"
         )
         end_time = time.time()
         execution_time = end_time - start_time
@@ -133,10 +138,10 @@ class GeminiTranslator(AIModel):
         sentences_json = json.loads(translated_sentences_stripped)
         translated_sentences = [
             SubtitleRecord(
-                text=sentence['english_translation'],
-                start=sentence['start_time'],
-                end=sentence['end_time'],
-                length=len(sentence['english_translation']),
+                text=sentence["english_translation"],
+                start=sentence["start_time"],
+                end=sentence["end_time"],
+                length=len(sentence["english_translation"]),
             )
             for sentence in sentences_json
         ]
