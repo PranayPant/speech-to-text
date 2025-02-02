@@ -90,10 +90,10 @@ class GeminiTranslator(AIModel):
             raise ValueError(
                 "Transcript does not contain sentence information. Please use a different model."
             )
-        
-        with open("./data/hindi_sentences.json", "w") as file:
+
+        with open("./data/hindi_sentences.json", "w", encoding='utf-8') as file:
             sentences_json = [sentence.model_dump_json() for sentence in transcript_record.sentences]
-            file.write(json.dumps(sentences_json))
+            file.write(json.dumps(sentences_json, ensure_ascii=False))
 
         chat_history = [
             {
@@ -115,13 +115,14 @@ class GeminiTranslator(AIModel):
         with open("./data/translated_transcript.txt", "w") as file:
             file.write(translated_transcript.text)
 
-        # polished_transcript = ai_chat.send_message(
-        #     f"Now polish the translated transcript so it sounds more natural to English speakers, outputting only the response text."
-        # )
-
+        start_time = time.time()
         translated_sentences = ai_chat.send_message(
             "You are given an array of sentences from the Hindi transcript that contain text, start, and end times. Using the sentences from the previously translated transcript, figure out the best way to translate each hindi sentence into English. Output only the response as a json array in the form [ {start_time, end_time, original_hindi_sentence, english_translation} ]." + f"Use the following as input: {transcript_record.sentences}"
         )
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Sentence translation execution time: {execution_time:.2f} seconds")
+
         translated_sentences_stripped = translated_sentences.text.strip(
             "```json\n"
         ).strip("\n```")
@@ -146,7 +147,6 @@ class GeminiTranslator(AIModel):
         srt = self._generate_srt(split_sentences)
         translated_transcript_record = TranslatedTranscriptRecord(
             transcript=translated_transcript.text,
-            # polished_transcript=polished_transcript.text,
             sentences=split_sentences,
             srt=srt,
             ai_model=AIModelName.GEMINI,

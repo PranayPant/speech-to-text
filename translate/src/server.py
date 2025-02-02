@@ -82,12 +82,20 @@ def create_translation(
     )
     upload_response = upload_to_google_drive(params=file_upload_request)
     srt_file_id = upload_response["file_id"]
-    body.srt_file_id = srt_file_id
+
+    translation_request = CreateTranslationRequest(
+        transcript_id=transcript_id,
+        srt_file_name=srt_file_name,
+        srt_file_id=srt_file_id,
+        split_sentences_at=body.split_sentences_at,
+        ai_model=body.ai_model,
+    )
+
     create_translation_response = CreateTranslationResponse(
         srt_file_id=srt_file_id, status="processing"
     )
 
-    background_tasks.add_task(create_translation_task_sync, body)
+    background_tasks.add_task(create_translation_task_sync, translation_request)
 
     return create_translation_response
 
