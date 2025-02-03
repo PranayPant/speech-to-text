@@ -13,6 +13,12 @@ services:
       - GOOGLE_DRIVE_SRT_FOLDER_ID=${GOOGLE_DRIVE_SRT_FOLDER_ID}
     ports:
       - 8001:8001
+    volumes:
+      - ./translate/data:/app/data
+    develop:
+      watch:
+        - action: rebuild
+          path: ./translate
   # transcribe:
   #   build: ./transcribe-service
   #   environment:
