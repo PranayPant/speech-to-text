@@ -5,7 +5,7 @@ from .gemini_ai import GeminiTranslator
 from .base_model import AIModel
 
 from ...types import AIModelName, CreateTranslationRequest, FileUpdateRequest
-from ...api.google_drive import update_file_google_drive
+from ...api.google_drive import update_file_google_drive, get_file_content
 from ...utils import run_in_thread
 
 
@@ -26,13 +26,20 @@ async def create_translation_task(params: CreateTranslationRequest) -> None:
     srt_file_name = params.srt_file_name
     srt_file_id = params.srt_file_id
     split_sentences_at = params.split_sentences_at
+    glossary_file_id = params.glossary_file_id
 
     translator = get_translator(
         ai_model=AIModelName(params.ai_model) if params.ai_model else AIModelName.GEMINI
     )
 
+    glossary_text = None
+    if glossary_file_id:
+        glossary_text = get_file_content(file_id=glossary_file_id)
+
     translated_transcript = await translator.translate_v2(
-        transcript_id=transcript_id, split_sentences_at=split_sentences_at
+        transcript_id=transcript_id,
+        split_sentences_at=split_sentences_at,
+        glossary=glossary_text,
     )
 
     srt = translated_transcript.srt

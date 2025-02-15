@@ -19,6 +19,7 @@ credentials = service_account.Credentials.from_service_account_file(
 
 drive_service = build("drive", "v3", credentials=credentials)
 
+
 def update_file_google_drive(params: FileUpdateRequest) -> dict:
     text, file_id, properties, file_name = (
         params.text,
@@ -102,3 +103,20 @@ def get_file_info(file_id: str) -> dict:
         "properties": file.get("properties"),
         "size": file.get("size"),
     }
+
+
+def get_file_content(file_id: str) -> str:
+    try:
+        request = drive_service.files().get_media(fileId=file_id)
+        file = request.execute()
+    except Exception as error:
+        print(f"Error getting file content from Google Drive: {error}")
+        raise error
+
+    try:
+        content = file.decode("utf-8")
+    except Exception as error:
+        print(f"Error decoding file content: {error}")
+        raise error
+
+    return content or ""

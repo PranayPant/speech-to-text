@@ -75,7 +75,10 @@ class GeminiTranslator(AIModel):
         return result.text
 
     async def translate_v2(
-        self, transcript_id: str, split_sentences_at: int | None
+        self,
+        transcript_id: str,
+        split_sentences_at: int | None,
+        glossary: str | None = None,
     ) -> TranslatedTranscriptRecord:
 
         transcript_query = TranscriptQuery(
@@ -103,19 +106,8 @@ class GeminiTranslator(AIModel):
 
         hindi_sentences = [sentence.text for sentence in transcript_record.sentences]
 
-        # chat_history = [
-        #     {
-        #         "parts": "You use single quotes to denote a quotation instead of a backslash followed by double quotes.",
-        #         "role": "user",
-        #     },
-        # ]
-
-        # ai_chat = self.model.start_chat(history=chat_history)  # type: ignore
-
         start_time = time.time()
-        # translated_transcript = ai_chat.send_message(
-        #     f"Read over the Hindi transcript and create an English translation that sounds natural and flowing to native English speakers, outputting only the response text: {transcript_record.transcript}"
-        # )
+
         prompt = (
             """
             Read over the given Hindi transcript and create an English translation that sounds natural and flowing to native English speakers.
@@ -136,15 +128,16 @@ class GeminiTranslator(AIModel):
             file.write(translated_transcript)
 
         start_time = time.time()
-        # translated_sentences = ai_chat.send_message(
-        #     "You are given an array of sentences from the Hindi transcript that contain text, start, and end times. Using the sentences from the previously translated transcript, figure out the best way to translate each hindi sentence into English. Output only the response as a json array in the form [ {start_time, end_time, original_hindi_sentence, english_translation} ]."
-        #     + f"Use the following as input: {transcript_record.sentences}"
-        # )
+
         prompt = (
             """
-            You are given an array of sentences from a Hindi transcript as well as an English translation of that transcript.
+            You are given an array of sentences from a Hindi transcript, 
+            an English translation of that transcript, 
+            and a glossary containing custom translations for specific Hindi words.
+
             Read over the English transcript to get an idea of how the sentences should be translated.
-            Consulting the English transcript, translate each Hindi sentence into contemporary English.
+
+            Consulting the English transcript and the glossary, translate each Hindi sentence into contemporary English.
 
             Return only the translated sentences as an array in the response.
 
@@ -157,7 +150,11 @@ class GeminiTranslator(AIModel):
             hindi_sentences = """
             + str(hindi_sentences)
             + """
-    
+
+            glossary = """
+            + (glossary or '""')
+            + """
+
             """
         )
         translated_texts = self.model.generate_content(
@@ -169,10 +166,6 @@ class GeminiTranslator(AIModel):
         end_time = time.time()
         execution_time = end_time - start_time
         print(f"Sentence translation execution time: {execution_time:.2f} seconds")
-
-        # translated_sentences_stripped = translated_sentences.text.strip(
-        #     "```json\n"
-        # ).strip("\n```")
 
         with open("./data/translated_sentences.json", "w") as file:
             file.write(translated_texts)
