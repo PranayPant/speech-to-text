@@ -66,7 +66,7 @@ class AIModel(ABC):
         return translated_record
 
     async def translate_v2(
-        self, transcript_id: str, split_sentences_at: int | None
+        self, transcript_id: str, split_sentences_at: int | None, glossary: str | None
     ) -> TranslatedTranscriptRecord:
         raise NotImplementedError
 

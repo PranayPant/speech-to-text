@@ -89,6 +89,7 @@ def create_translation(
         srt_file_id=srt_file_id,
         split_sentences_at=body.split_sentences_at,
         ai_model=body.ai_model,
+        glossary_file_id=body.glossary_file_id,
     )
 
     create_translation_response = CreateTranslationResponse(
